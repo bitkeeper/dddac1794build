@@ -1,0 +1,11 @@
+[Unit]
+Description=External softpower on/off
+After=multi-user.target
+
+[Service]
+Type=idle
+ExecStart=/usr/bin/dtoverlay gpio-poweroff gpiopin=17 active_low
+
+[Install]
+WantedBy=multi-user.target 
+

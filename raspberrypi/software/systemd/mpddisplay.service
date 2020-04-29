@@ -1,0 +1,11 @@
+[Unit]
+Description=MPD Display
+After=multi-user.target
+
+[Service]
+Type=idle
+ExecStart=/usr/bin/python /home/pi/mpddisplay/mp2luma.py --display sh1106 --rotate 0
+
+[Install]
+WantedBy=multi-user.target 
+

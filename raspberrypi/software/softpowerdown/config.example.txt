@@ -1,0 +1,2 @@
+dtoverlay=gpio-shutdown,gpio_pin=22,active_low=0,gpio_pull=off
+#dtoverlay=gpio-poweroff,gpiopin=17,active_low

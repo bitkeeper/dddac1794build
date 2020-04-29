@@ -1,0 +1,2 @@
+#dtoverlay=hifiberry-digi-pro
+dtoverlay=hifiberry-digi-pro-remap,clock44_gpio_pin=16,clock48_gpio_pin=6

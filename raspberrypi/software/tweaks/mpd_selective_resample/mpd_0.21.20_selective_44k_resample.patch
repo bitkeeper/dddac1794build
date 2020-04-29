@@ -1,0 +1,204 @@
+diff -Naur mpd-0.21.20.clean/src/AudioFormat.cxx mpd-0.21.20/src/AudioFormat.cxx
+--- mpd-0.21.20.clean/src/AudioFormat.cxx	2020-02-16 20:43:35.000000000 +0100
++++ mpd-0.21.20/src/AudioFormat.cxx	2020-04-18 11:49:35.561381170 +0200
+@@ -22,15 +22,52 @@
+ #include "util/StringFormat.hxx"
+ 
+ #include <assert.h>
++#include <map>
++
++/**
++ * If source is based on 44.1k get nearest valid 44.1k variant from the target sample rate.
++ * For example if the source is 44.1k and the target is 96k it will return 88.2k.
++ *
++ * param source_rate the samplerate of the current source
++ * param target_rate the samplerate of which the source should be converted to.
++ * return the final sample rate of which the source should be converted to
++ */
++unsigned
++determine_selective_resample_rate(unsigned source_rate, unsigned target_rate) noexcept;
++
++unsigned
++determine_selective_resample_rate(unsigned source_rate, unsigned target_rate) noexcept
++{
++	unsigned out_sample_rate = source_rate;
++	const std::map<unsigned, unsigned> lut48to41 = {
++		{384000, 352800 },
++		{192000, 176400 },
++	 	 {96000,  88200 },
++		 {48000,  44100 }
++	};	
++
++	if( source_rate % 44100 == 0 && 
++	    target_rate % 48000 == 0 && 
++	    lut48to41.find(target_rate) != lut48to41.end() )
++		out_sample_rate = lut48to41.find(target_rate)->second;
++	else if(target_rate)
++		out_sample_rate = target_rate;
++
++    return out_sample_rate;
++}
+ 
+ void
+-AudioFormat::ApplyMask(AudioFormat mask) noexcept
++AudioFormat::ApplyMask(AudioFormat mask, bool selective_44k_resample) noexcept
+ {
+ 	assert(IsValid());
+ 	assert(mask.IsMaskValid());
+ 
+-	if (mask.sample_rate != 0)
+-		sample_rate = mask.sample_rate;
++	if (mask.sample_rate != 0) {
++		if(selective_44k_resample)
++			sample_rate = determine_selective_resample_rate(sample_rate, mask.sample_rate);
++		else
++			sample_rate = mask.sample_rate;
++	}
+ 
+ 	if (mask.format != SampleFormat::UNDEFINED)
+ 		format = mask.format;
+diff -Naur mpd-0.21.20.clean/src/AudioFormat.hxx mpd-0.21.20/src/AudioFormat.hxx
+--- mpd-0.21.20.clean/src/AudioFormat.hxx	2020-02-16 20:43:35.000000000 +0100
++++ mpd-0.21.20/src/AudioFormat.hxx	2020-04-18 11:26:53.947027680 +0200
+@@ -125,12 +125,12 @@
+ 		return !(*this == other);
+ 	}
+ 
+-	void ApplyMask(AudioFormat mask) noexcept;
++	void ApplyMask(AudioFormat mask, bool selective_44k_resample = false) noexcept;
+ 
+ 	gcc_pure
+-	AudioFormat WithMask(AudioFormat mask) const noexcept {
++	AudioFormat WithMask(AudioFormat mask, bool selective_44k_resample = false) const noexcept {
+ 		AudioFormat result = *this;
+-		result.ApplyMask(mask);
++		result.ApplyMask(mask, selective_44k_resample);
+ 		return result;
+ 	}
+ 
+diff -Naur mpd-0.21.20.clean/src/config/Option.hxx mpd-0.21.20/src/config/Option.hxx
+--- mpd-0.21.20.clean/src/config/Option.hxx	2020-02-16 20:43:35.000000000 +0100
++++ mpd-0.21.20/src/config/Option.hxx	2020-04-18 11:01:18.003725787 +0200
+@@ -79,6 +79,7 @@
+ 	DESPOTIFY_USER,
+ 	DESPOTIFY_PASSWORD,
+ 	DESPOTIFY_HIGH_BITRATE,
++	SELECTIVE_44K_RESAMPLE,	
+ 	MAX
+ };
+ 
+diff -Naur mpd-0.21.20.clean/src/config/Templates.cxx mpd-0.21.20/src/config/Templates.cxx
+--- mpd-0.21.20.clean/src/config/Templates.cxx	2020-02-16 20:43:35.000000000 +0100
++++ mpd-0.21.20/src/config/Templates.cxx	2020-04-18 11:01:18.033725641 +0200
+@@ -74,6 +74,7 @@
+ 	{ "despotify_user", false, true },
+ 	{ "despotify_password", false, true },
+ 	{ "despotify_high_bitrate", false, true },
++	{ "selective_44k_resample" }
+ };
+ 
+ static constexpr unsigned n_config_param_templates =
+diff -Naur mpd-0.21.20.clean/src/decoder/Control.cxx mpd-0.21.20/src/decoder/Control.cxx
+--- mpd-0.21.20.clean/src/decoder/Control.cxx	2020-02-16 20:43:35.000000000 +0100
++++ mpd-0.21.20/src/decoder/Control.cxx	2020-04-18 11:25:45.317314038 +0200
+@@ -27,10 +27,12 @@
+ 
+ DecoderControl::DecoderControl(Mutex &_mutex, Cond &_client_cond,
+ 			       const AudioFormat _configured_audio_format,
++			       const bool _selective_44k_resample,
+ 			       const ReplayGainConfig &_replay_gain_config) noexcept
+ 	:thread(BIND_THIS_METHOD(RunThread)),
+ 	 mutex(_mutex), client_cond(_client_cond),
+ 	 configured_audio_format(_configured_audio_format),
++	 selective_44k_resample(_selective_44k_resample),
+ 	 replay_gain_config(_replay_gain_config) {}
+ 
+ DecoderControl::~DecoderControl() noexcept
+@@ -61,7 +63,7 @@
+ 	assert(audio_format.IsValid());
+ 
+ 	in_audio_format = audio_format;
+-	out_audio_format = audio_format.WithMask(configured_audio_format);
++	out_audio_format = audio_format.WithMask(configured_audio_format, selective_44k_resample);
+ 
+ 	seekable = _seekable;
+ 	total_time = _duration;
+diff -Naur mpd-0.21.20.clean/src/decoder/Control.hxx mpd-0.21.20/src/decoder/Control.hxx
+--- mpd-0.21.20.clean/src/decoder/Control.hxx	2020-02-16 20:43:35.000000000 +0100
++++ mpd-0.21.20/src/decoder/Control.hxx	2020-04-18 11:01:02.853799424 +0200
+@@ -169,6 +169,8 @@
+ 	const ReplayGainConfig replay_gain_config;
+ 	ReplayGainMode replay_gain_mode = ReplayGainMode::OFF;
+ 
++	const bool selective_44k_resample;
++
+ 	float replay_gain_db = 0;
+ 	float replay_gain_prev_db = 0;
+ 
+@@ -182,6 +184,7 @@
+ 	 */
+ 	DecoderControl(Mutex &_mutex, Cond &_client_cond,
+ 		       const AudioFormat _configured_audio_format,
++		       const bool _selective_44k_resample,
+ 		       const ReplayGainConfig &_replay_gain_config) noexcept;
+ 	~DecoderControl() noexcept;
+ 
+diff -Naur mpd-0.21.20.clean/src/Main.cxx mpd-0.21.20/src/Main.cxx
+--- mpd-0.21.20.clean/src/Main.cxx	2020-02-16 20:43:35.000000000 +0100
++++ mpd-0.21.20/src/Main.cxx	2020-04-18 11:01:18.033725641 +0200
+@@ -335,6 +335,8 @@
+ 		std::throw_with_nested(FormatRuntimeError("Failed to parse line %i",
+ 							  param->line));
+ 	}
++
++	partition.pc.SetSelectiveResampleMode( config.GetBool(ConfigOption::SELECTIVE_44K_RESAMPLE, false) );
+ }
+ 
+ inline void
+diff -Naur mpd-0.21.20.clean/src/player/Control.cxx mpd-0.21.20/src/player/Control.cxx
+--- mpd-0.21.20.clean/src/player/Control.cxx	2020-02-16 20:43:35.000000000 +0100
++++ mpd-0.21.20/src/player/Control.cxx	2020-04-18 11:17:01.229517989 +0200
+@@ -35,7 +35,8 @@
+ 	 buffer_chunks(_buffer_chunks),
+ 	 configured_audio_format(_configured_audio_format),
+ 	 thread(BIND_THIS_METHOD(RunThread)),
+-	 replay_gain_config(_replay_gain_config)
++	 replay_gain_config(_replay_gain_config),
++	 selective_44k_resample(false)
+ {
+ }
+ 
+diff -Naur mpd-0.21.20.clean/src/player/Control.hxx mpd-0.21.20/src/player/Control.hxx
+--- mpd-0.21.20.clean/src/player/Control.hxx	2020-02-16 20:43:35.000000000 +0100
++++ mpd-0.21.20/src/player/Control.hxx	2020-04-18 11:18:11.139221553 +0200
+@@ -229,6 +229,8 @@
+ 
+ 	const ReplayGainConfig replay_gain_config;
+ 
++	bool selective_44k_resample;
++
+ 	FloatDuration total_play_time = FloatDuration::zero();
+ 
+ public:
+@@ -318,6 +320,10 @@
+ 		replay_gain_mode = _mode;
+ 	}
+ 
++	void SetSelectiveResampleMode(bool enable) noexcept {
++		selective_44k_resample = enable;
++	}
++
+ 	/**
+ 	 * Like ReadTaggedSong(), but locks and unlocks the object.
+ 	 */
+diff -Naur mpd-0.21.20.clean/src/player/Thread.cxx mpd-0.21.20/src/player/Thread.cxx
+--- mpd-0.21.20.clean/src/player/Thread.cxx	2020-02-16 20:43:35.000000000 +0100
++++ mpd-0.21.20/src/player/Thread.cxx	2020-04-18 11:01:02.863799375 +0200
+@@ -1144,6 +1144,7 @@
+ 
+ 	DecoderControl dc(mutex, cond,
+ 			  configured_audio_format,
++			  selective_44k_resample,
+ 			  replay_gain_config);
+ 	dc.StartThread();
+ 
