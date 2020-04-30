@@ -1,0 +1,11 @@
+This patch will add an other mpd to the moode mpd version selection dialog
+--- snd-config.php.orig	2020-04-30 10:34:06.550276838 +0200
++++ snd-config.php	2020-04-30 11:02:33.039038621 +0200
+@@ -446,6 +446,7 @@
+ // MPD version
+ $_select['mpdver'] .= "<option value=\"0.21.22\" " . (($_SESSION['mpdver'] == '0.21.22') ? "selected" : "") . ">0.21.22 (Default)</option>\n";
+ $_select['mpdver'] .= "<option value=\"0.22~git\" " . (($_SESSION['mpdver'] == '0.22~git') ? "selected" : "") . ">0.22~git (Test)</option>\n";
++$_select['mpdver'] .= "<option value=\"0.21.23sr\" " . (($_SESSION['mpdver'] == '0.21.23sr') ? "selected" : "") . ">0.21.23sr (With Selective Resample)</option>\n";
+ 
+ // auto-shuffle
+ $_select['ashufflesvc1'] .= "<input type=\"radio\" name=\"ashufflesvc\" id=\"toggleashufflesvc1\" value=\"1\" " . (($_SESSION['ashufflesvc'] == 1) ? "checked=\"checked\"" : "") . ">\n";
