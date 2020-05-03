@@ -71,6 +71,7 @@ Directory content:
 * tweaks - 
   * hifiberry-digi-pro-remap - allow 44k1 based crystal to be used with Allo Isolator (requires hardware mod).
   * moode_albumcols - alternative css @media query for more albums on PC and tablet screens.
+  * moode_albumyear - make the albumyear search priority  OriginalRelease, OriginalYear, Date insteadof only Date.
   * moode_mpd_tweaks - Moode doesn't support all mpd options, with this tweak you can add in the mpd config screen.
   * mpd_selective_resample - Patch MPD (tested on 0.21.20 and 0.21.23) to support selective resample and add it selectable to the Moode MPD version selector.
 * util - utils to easy moode/mpd development easier.
@@ -239,7 +240,7 @@ selective_44k_resample "yes"
 
 
 
-## Change the number of visible albums on several device types
+## Moode: Change the number of visible albums on several device types
 Instead of changing the original file, the new css media queries are placed in a separated file.
 This file will first include the original one and then override.
 
@@ -247,4 +248,13 @@ This file will first include the original one and then override.
 cd /var/www/css
 sudo mv /var/www/css/moode.min.css /var/www/css/moode.min.css.clean
 sudo ln -s ~/dddac1794build/raspberrypi/software/tweaks/moode_albumcols/moode_additional_media.css moode.min.css
+```
+
+## Moode: use search priority priority  OriginalRelease, OriginalYear, Date insteadof only Date
+When you are searching for albums on year or year range and an album is remastered and/or released 
+probably you don't want that date, but the original date of release (if present).
+
+```
+cd /var/www
+sudo patch -p2 < home/pi/dddac1794build/raspberrypi/software/tweaks/moode_albumyear/moode_albumyear.651.patch
 ```

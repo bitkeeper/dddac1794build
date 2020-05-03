@@ -1,0 +1,58 @@
+ www/inc/playerlib.php | 30 ++++++++++++++++++++++++++++--
+ 1 file changed, 28 insertions(+), 2 deletions(-)
+
+diff --git a/www/inc/playerlib.php b/www/inc/playerlib.php
+index af1f0ae..a6e61f4 100755
+--- a/www/inc/playerlib.php
++++ b/www/inc/playerlib.php
+@@ -416,6 +416,32 @@ function genFlatList($sock) {
+ 	}
+ }
+ 
++/*
++  Try to get the oldest date when the track/album is released.
++
++  When a album is remastered and/or released probably you don't want 
++  that date, but the original date of release (if present).
++
++  eac        : Date (y)
++  musicbrainz: Date (y-m-d), Original Release Date(y-m-d), Original Year (y)
++
++*/
++function getTrackYear($trackData) {
++    $trackYear = "";
++    
++	if (array_key_exists('OriginalDate', $trackData)) {
++		$trackYear = $trackData['OriginalDate'];
++	}
++	else if (array_key_exists('OriginalReleaseDate', $trackData)) {
++		$trackYear = $trackData['OriginalReleaseDate'];
++	}
++	else if (array_key_exists('Date', $trackData)) {
++        $trackYear = $trackData['Date'];        
++    }
++
++	return $trackYear ? substr($trackYear,0,4) : "";
++}
++
+ // Generate library array (@chris-rudmin rewrite)
+ function genLibrary($flat) {
+ 	$lib = array();
+@@ -429,7 +455,7 @@ function genLibrary($flat) {
+ 			'artist' => ($flatData['Artist'] ? $flatData['Artist'] : 'Unknown Artist'),
+ 			'album_artist' => $flatData['AlbumArtist'],
+ 			'composer' => ($flatData['Composer'] ? $flatData['Composer'] : 'Composer tag missing'),
+-			'year' => substr($flatData['Date'], 0, 4),
++			'year' => getTrackYear($flatData),
+ 			'time' => $flatData['Time'],
+ 			'album' => ($flatData['Album'] ? $flatData['Album'] : 'Unknown Album'),
+ 			'genre' => ($flatData['Genre'] ? $flatData['Genre'] : 'Unknown'),
+@@ -511,7 +537,7 @@ function genLibraryUTF8Rep($flat) {
+ 			'artist' => utf8rep(($flatData['Artist'] ? $flatData['Artist'] : 'Unknown Artist')), //r44f add inner brackets
+ 			'album_artist' => utf8rep($flatData['AlbumArtist']),
+ 			'composer' => utf8rep(($flatData['Composer'] ? $flatData['Composer'] : 'Composer tag missing')),
+-			'year' => utf8rep(substr($flatData['Date'], 0, 4)),
++			'year' => utf8rep(getTrackYear($flatData)),			
+ 			'time' => utf8rep($flatData['Time']),
+ 			'album' => utf8rep(($flatData['Album'] ? $flatData['Album'] : 'Unknown Album')),
+ 			'genre' => utf8rep(($flatData['Genre'] ? $flatData['Genre'] : 'Unknown')),
