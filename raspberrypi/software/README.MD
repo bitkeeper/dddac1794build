@@ -242,13 +242,20 @@ selective_44k_resample "yes"
 
 ## Moode: Change the number of visible albums on several device types
 Instead of changing the original file, the new css media queries are placed in a separated file.
-This file will first include the original one and then override.
+This file will be include after the moode.min.css include.
 
 ```
-cd /var/www/css
-sudo mv /var/www/css/moode.min.css /var/www/css/moode.min.css.clean
-sudo ln -s ~/dddac1794build/raspberrypi/software/tweaks/moode_albumcols/moode_additional_media.css moode.min.css
+cd /var/local/www
+sudo cp header.php header_dev.php
+sudo patch -b header.php < /home/pi/dddac1794build/raspberrypi/software/tweaks/moode_albumcols/moode_652_custom_css.patch
+sudo cp /home/pi/dddac1794build/raspberrypi/software/tweaks/moode_albumcols/moode_additional_media.css /var/www/css/moodecustom.css
 ```
+
+Or in case of development replace the last line by:
+```
+sudo ln -s /home/pi/dddac1794build/raspberrypi/software/tweaks/moode_albumcols/moode_additional_media.css /var/www/css/moodecustom.css
+```
+
 
 ## Moode: use search priority priority  OriginalRelease, OriginalYear, Date insteadof only Date
 When you are searching for albums on year or year range and an album is remastered and/or released 

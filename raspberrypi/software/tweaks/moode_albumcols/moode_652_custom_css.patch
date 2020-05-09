@@ -1,0 +1,10 @@
+--- header_run.php	2020-05-04 17:10:26.443015689 +0200
++++ header_dev.php	2020-05-09 18:10:25.781780193 +0200
+@@ -47,6 +47,7 @@
+ 		versioned_resource('css/fontawesome-moode.min.css');
+ 		versioned_resource('css/panels.min.css');
+ 		versioned_resource('css/moode.min.css');
++		versioned_resource('css/moodecustom.css');
+ 
+ 		// Common js
+ 		versioned_script('js/bootstrap.min.js');
