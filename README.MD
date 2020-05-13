@@ -23,3 +23,5 @@ System exists out of:
 * Power controller for soft power down (kill power after Pi is down)
 * Hifi2000 Galaxy enclosure with custom back and front panel
 * OLED display with track information or source selection
+
+More about the software install can be found in [README.MD](raspberrypi/software/README.MD).
