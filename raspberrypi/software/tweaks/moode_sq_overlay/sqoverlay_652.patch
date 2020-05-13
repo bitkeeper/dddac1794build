@@ -1,0 +1,98 @@
+--- /home/pi/www.652.org/inc/playerlib.php	2020-05-04 21:57:28.000000000 +0200
++++ /var/www/inc/playerlib.php	2020-05-11 20:56:00.555514235 +0200
+@@ -416,6 +416,43 @@
+ 	}
+ }
+ 
++/**
++ *  Array with lossless audio file extensions
++ * 
++ *  wav  - raw wavefiles
++ *  flac - Free Lossless Audio Codec)
++ *  ogg  - Ogg Vorbis
++ *  wv   - Wavepack
++ *  dsf  - Direct Stream Digital 
++ */
++//DEFINE('AUDIO_FORMATS_LOSSLESS', array('flac','wav', 'wv', 'ogg', 'dsf')); // not supported by used PHP
++$AUDIO_FORMATS_LOSSLESS = array('flac','wav', 'wv', 'ogg', 'dsf');
++
++/**
++ *  getSoundQualityTag returns the sound quality of the track. 
++ *  If a lossy sound format is used, NULL is returned. If the format is 
++ *  lossless, the rounded samplerate devided by 1000 is returned.
++ */
++function getSoundQualityTag($trackdata) {
++	// $trackdata contains format and file like:
++	// 'format': '44100:16:2',
++	// 'file': 'NAS/losless/Artists/Youn Sun Nah/Youn Sun Nah - Lento (2013)/02 Lament.flac',
++	global $AUDIO_FORMATS_LOSSLESS;
++
++	$sqtag = '';
++	$ext =  trim(strtolower(pathinfo (  $trackdata['file'], PATHINFO_EXTENSION ) ));
++		
++	if( in_array($ext, $AUDIO_FORMATS_LOSSLESS ) == 1) {
++		$samplerate = NULL;
++		if(array_key_exists('Format', $trackdata) && $trackdata['Format']) {
++			$samplerate = intval(explode ( ':',  $trackdata['Format'] )[0] );
++			$sqtag = strval(floor($samplerate/1000));
++		}
++	}
++
++	return $sqtag;
++}
++
+ // Generate library array (@chris-rudmin rewrite)
+ function genLibrary($flat) {
+ 	$lib = array();
+@@ -434,7 +471,8 @@
+ 			'album' => ($flatData['Album'] ? $flatData['Album'] : 'Unknown Album'),
+ 			'genre' => ($flatData['Genre'] ? $flatData['Genre'] : 'Unknown'),
+ 			'time_mmss' => songTime($flatData['Time']),
+-			'last_modified' => $flatData['Last-Modified']
++			'last_modified' => $flatData['Last-Modified'],
++			'soundquality' => getSoundQualityTag($flatData)
+ 		);
+ 
+ 		array_push($lib, $songData);
+@@ -516,7 +554,8 @@
+ 			'album' => utf8rep(($flatData['Album'] ? $flatData['Album'] : 'Unknown Album')),
+ 			'genre' => utf8rep(($flatData['Genre'] ? $flatData['Genre'] : 'Unknown')),
+ 			'time_mmss' => utf8rep(songTime($flatData['Time'])),
+-			'last_modified' => $flatData['Last-Modified']
++			'last_modified' => $flatData['Last-Modified'],
++			'sqlabel' => getSoundQualityTag($flatData)
+ 		);
+ 
+ 		array_push($lib, $songData);
+--- /home/pi/www.652.org/js/scripts-library.js	2020-05-04 17:10:22.000000000 +0200
++++ /var/www/js/scripts-library.js	2020-05-11 23:25:07.902126903 +0200
+@@ -150,8 +150,9 @@
+ 		var md5 = $.md5(file.substring(0,file.lastIndexOf('/')));
+ 		var artist = findAlbumProp(albumTracks, 'artist');
+ 		var albumArtist = findAlbumProp(albumTracks, 'album_artist');
+-        //var year = SESSION.json['library_albumview_sort'] == 'Year' ? getYear(albumTracks) : '';
+-        var year = getYear(albumTracks);
++		var year = getYear(albumTracks);
++		var soundquality = findAlbumProp(albumTracks, 'soundquality') ;
++		soundquality = soundquality? soundquality: "";
+ 		return {
+ 			last_modified: getLastModified(albumTracks),
+             year: year,
+@@ -159,6 +160,7 @@
+ 			genre: findAlbumProp(albumTracks, 'genre'),
+ 			all_genres: Object.keys(albumTracks.reduce(reduceGenres, {})),
+ 			artist: albumArtist || artist,
++			soundquality: soundquality,
+ 			imgurl: '/imagesw/thmcache/' + encodeURIComponent(md5) + '.jpg'
+ 		};
+ 	});
+@@ -545,7 +547,8 @@
+ 
+ 		output2 += '<li class="lib-entry">'
+             + '<img class="lazy-albumview" data-original="' + filteredAlbumCovers[i].imgurl + '">'
+-            + '<div class="cover-menu" data-toggle="context" data-target="#context-menu-lib-all"></div>'
++			+ '<div class="cover-menu" data-toggle="context" data-target="#context-menu-lib-all"></div>'
++			+ '<div class="audio-quality sq_'+filteredAlbumCovers[i].soundquality+'"><div class="bottom_aligner">'+filteredAlbumCovers[i].soundquality+'</div></div>'
+             + '<span class="album-name">' + filteredAlbumCovers[i].album + '</span>'
+             + '<div class="artyear"><span class="artist-name">' + filteredAlbumCovers[i].artist + '</span><span class="album-year">' + albumViewYear + '</span></div></li>';
+ 	}

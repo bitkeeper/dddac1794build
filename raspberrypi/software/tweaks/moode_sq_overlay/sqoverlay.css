@@ -1,0 +1,55 @@
+/**
+ * From here are the classes for the samplerate overlay
+ */
+.audio-quality {
+	position:relative;
+	float:right;
+	height:3rem;width:3rem;
+	background-size:3rem 3rem;
+	background-repeat:no-repeat;
+	height:3rem;width:3rem;
+	background-position:.5rem 0rem;
+	transform:translate(-17%, -115%);
+	opacity: 0.4;
+}
+
+.audio-quality > div {
+	/* text bottom right*/
+	position: absolute;
+  	bottom: 0;
+	right:0;
+	/*background-color:grey; */
+	mix-blend-mode: difference;
+	text-shadow: 2px 2px 3px #000000;
+}
+
+/* used for compressed files */
+.sq_ {
+	background-image:url('/images/soundquality-overlay/triangle_orange.png');
+}
+
+/* all other used for specific samplerates*/
+.sq_44{
+	background-image: url('/images/soundquality-overlay/triangle_red.png');
+}
+
+.sq_48 {	
+	background-image: url('/images/soundquality-overlay/triangle_red.png');
+}
+
+.sq_88 {
+	background-image: url('/images/soundquality-overlay/triangle_aqua.png');
+}
+
+.sq_96 {
+	background-image: url('/images/soundquality-overlay/triangle_aqua.png');
+	
+}
+
+.sq_192 {
+	background-image: url('/images/soundquality-overlay/triangle_yellow.png');
+}
+
+.sq_384 {
+	background-image: url('/images/soundquality-overlay/triangle_yellow.png');
+}
