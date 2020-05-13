@@ -237,9 +237,6 @@ selective_44k_resample "yes"
 * Press the save button at the top of the screen
 
 
-
-
-
 ## Moode: Change the number of visible albums on several device types
 Instead of changing the original file, the new css media queries are placed in a separated file.
 This file will be include after the moode.min.css include.
@@ -264,4 +261,18 @@ probably you don't want that date, but the original date of release (if present)
 ```
 cd /var/www
 sudo patch -p2 < home/pi/dddac1794build/raspberrypi/software/tweaks/moode_albumyear/moode_albumyear.651.patch
+```
+
+Note: This fix will be part of the moOde 6.6.x release.
+
+## Moode: show sound quality overlays
+Add an overlay to each album thumb in the library.
+The overlay adds a colored triangle with a the samplerate.
+
+```
+sudo cp  ~/dddac1794build/raspberrypi/software/tweaks/moode_sq_overlay/images/* /var/www/images
+cd /var/local/www
+sudo patch -b -p2 < ~/dddac1794build/raspberrypi/software/tweaks/moode_sq_overlay/sqoverlay_652.patch
+sudo cat ~/dddac1794build/raspberrypi/software/tweaks/moode_sq_overlay/sqoverlay.css >> /var/www/css/moodecustom.css
+sudo echo "" > /var/local/www/libcache.json
 ```
