@@ -1,0 +1,115 @@
+diff -Naur /home/pi/moode/www/js/playerlib.js js/playerlib.js
+--- /home/pi/moode/www/js/playerlib.js	2020-05-18 20:58:33.037737530 +0200
++++ js/playerlib.js	2020-05-19 20:40:30.426249590 +0200
+@@ -1264,7 +1264,7 @@
+ 			if (data[i].file.substr(0, 5) == 'RADIO') {
+ 				if (panel == 'radio_panel') {
+ 					var imgurl = '../images/radio-logos/thumbs/' + filename.replace(path + '/', '') + '.jpg';
+-					output += '"><div class="db-icon db-song db-browse db-action"><img class="lazy-radioview" data-original="' + imgurl  + '"><div class="cover-menu" data-toggle="context" data-target="#context-menu-radio-item"></div></div><div class="db-entry db-song db-browse">';
++					output += '"><div class="db-icon db-song db-browse db-action"><img class="lazy-radioview" loading="lazy" data-original="' + imgurl  + '"><div class="cover-menu" data-toggle="context" data-target="#context-menu-radio-item"></div></div><div class="db-entry db-song db-browse">';
+ 				}
+ 				else {
+ 					output += '"><div class="db-icon db-song db-browse db-action"><a class="btn" href="#notarget" data-toggle="context" data-target="#context-menu-radio-item"><i class="fas fa-microphone sx db-browse db-browse-icon"></i></a></div><div class="db-entry db-song db-browse">';
+@@ -3199,32 +3199,49 @@
+ 	$('#menu-header').text(headerText);
+ }
+ 
++/**
++ * Enable lazy loading of images for a certain view.
++ * Instead of src the image should have a data-original.
++ * 
++ * When the client doesn't supports native lazy loading the library jquery.lazyload is used.
++ * 
++ * @param {string} view - the view for lazy loading
++ */
+ function lazyLode(view) {
+-    //console.log('lazylode', view);
++	var container,
++		selector;
++		
+ 	switch (view) {
+ 		case 'radio':
+-			setTimeout(function(){
+-				$('img.lazy-radioview').lazyload({
+-				    container: $('#radiocovers')
+-				});
+-			}, LAZYLOAD_TIMEOUT);
++			selector = 'img.lazy-radioview';
++			container = '#radiocovers';
+ 			break;
+ 		case 'tag':
+-            if (SESSION.json['library_tagview_covers'] == 'No') {return;}
+-			setTimeout(function(){
+-				$('img.lazy-tagview').lazyload({
+-				    container: $('#lib-album')
+-				});
+-			}, LAZYLOAD_TIMEOUT);
++            if (SESSION.json['library_tagview_covers'] == 'No') {break;}
++			selector = 'img.lazy-tagview';
++			container = '#lib-albums';
+ 			break;
+ 		case 'album':
++			selector = 'img.lazy-albumview';
++			container = '#lib-albumcover';
++			break;
++	}
++
++	if( selector && container) {
++		if ('loading' in HTMLImageElement.prototype) {
++			const images = document.querySelectorAll(selector);
++			images.forEach(img => {
++				img.src = img.dataset.original; // set the url back to the src				
++			});			
++		} else {		
+ 			setTimeout(function(){
+-				$('img.lazy-albumview').lazyload({
+-				    container: $('#lib-albumcover')
++				$(selector).lazyload({
++					container: $(container)
+ 				});
+ 			}, LAZYLOAD_TIMEOUT);
+-			break;
+ 		}
++    }
++
+ }
+ 
+ function setFontSize() {
+diff -Naur /home/pi/moode/www/js/scripts-library.js js/scripts-library.js
+--- /home/pi/moode/www/js/scripts-library.js	2020-05-18 20:58:33.047737521 +0200
++++ js/scripts-library.js	2020-05-19 20:52:56.245993006 +0200
+@@ -550,7 +550,7 @@
+ 
+ 		if (SESSION.json['library_tagview_covers'] == 'Yes') {
+ 			output += '<li class="lib-entry">'
+-                + '<img class="lazy-tagview" data-original="' + filteredAlbums[i].imgurl + '">'
++                + '<img class="lazy-tagview" loading="lazy" data-original="' + filteredAlbums[i].imgurl + '">'
+                 + tagViewHdDiv
+                 + '<div class="tag-cover-text"><span class="album-name-art">' + filteredAlbums[i].album + '</span>'
+                 + '<span class="artist-name-art">' + filteredAlbums[i].artist + '</span>'
+@@ -565,7 +565,7 @@
+         }
+ 
+ 		output2 += '<li class="lib-entry">'
+-            + '<img class="lazy-albumview" data-original="' + filteredAlbumCovers[i].imgurl + '">'
++            + '<img class="lazy-albumview" loading="lazy" data-original="' + filteredAlbumCovers[i].imgurl + '">'
+             + '<div class="cover-menu" data-toggle="context" data-target="#context-menu-lib-all"></div>'
+ 			+ albumViewHdDiv
+ 			+ albumViewBgDiv
+@@ -604,14 +604,10 @@
+ 
+ 	// Start lazy load
+ 	if ($('.album-view-btn').hasClass('active')) {
+-		$('img.lazy-albumview').lazyload({
+-			container: $('#lib-albumcover')
+-		});
++		lazyLode('album');
+ 	}
+ 	else if ($('.tag-view-btn').hasClass('active') && SESSION.json['library_tagview_covers'] == 'Yes') {
+-		$('img.lazy-tagview').lazyload({
+-		    container: $('#lib-album')
+-		});
++		lazyLode('tag');
+ 	}
+ 
+ 	renderSongs();

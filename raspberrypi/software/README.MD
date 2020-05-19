@@ -238,6 +238,8 @@ selective_44k_resample "yes"
 
 
 ## Moode: Change the number of visible albums on several device types
+
+_In 6.6 the scheme is changed, need new fix_
 Instead of changing the original file, the new css media queries are placed in a separated file.
 This file will be include after the moode.min.css include.
 
@@ -255,6 +257,9 @@ sudo ln -s /home/pi/dddac1794build/raspberrypi/software/tweaks/moode_albumcols/m
 
 
 ## Moode: use search priority priority  OriginalRelease, OriginalYear, Date insteadof only Date
+
+_No need for this patch anymore, is partof the 6.6 code tree_
+
 When you are searching for albums on year or year range and an album is remastered and/or released 
 probably you don't want that date, but the original date of release (if present).
 
@@ -266,6 +271,9 @@ sudo patch -p2 < home/pi/dddac1794build/raspberrypi/software/tweaks/moode_albumy
 Note: This fix will be part of the moOde 6.6.x release.
 
 ## Moode: show sound quality overlays
+
+_In 6.6 support for the encoded at information is added. Only the triangle overlays didn't make it to the source tree. Need to change the patch._
+
 Add an overlay to each album thumb in the library.
 The overlay adds a colored triangle with a the samplerate.
 
@@ -276,3 +284,60 @@ sudo patch -b -p2 < ~/dddac1794build/raspberrypi/software/tweaks/moode_sq_overla
 sudo cat ~/dddac1794build/raspberrypi/software/tweaks/moode_sq_overlay/sqoverlay.css >> /var/www/css/moodecustom.css
 sudo echo "" > /var/local/www/libcache.json
 ```
+
+todo:
+- update to use base of 6.6
+- use css triangle instead of images. (see https://css-tricks.com/the-shapes-of-css/)
+
+## After autocompletion search results 
+
+_Is part of 6.6 sourcetree_
+trim search value 
+
+todo: patch
+
+## More responsive orientation change
+In the header.php remove the orientation change handler.
+
+Original:
+```html
+<body onorientationchange="javascript:location.reload(true); void 0;">
+```
+
+New:
+```html
+<body >
+```
+
+## Use native lazy loading
+
+Default a library is supported, however modern browser support lazy loading of images native.
+https://www.sitepoint.com/five-techniques-lazy-load-images-website-performance/
+https://addyosmani.com/blog/lazy-loading/
+https://caniuse.com/#feat=loading-lazy-attr
+
+```
+cd /var/www/js
+sudo patch -b -p1 < ~/dddac1794build/raspberrypi/software/tweaks/moode_nativelazy_loading/native_lazy_loading.patch
+```
+
+
+
+## Install of npm
+
+```
+ap-get install npm
+```
+Is about 60MB.
+
+
+## Show album cover on playlist
+
+todo:
+
+
+===============================================================================================================
+currently needed when installing 6.6 develop branch:
+sudo sqlite3 /var/local/www/db/moode-sqlite3.db "INSERT INTO cfg_system VALUES (138, 'library_thumbnail_columns', '6/2 (Default)')"
+sudo sqlite3 /var/local/www/db/moode-sqlite3.db "INSERT INTO cfg_system VALUES (139, 'library_encoded_at', '0)')"
+sudo sqlite3 /var/local/www/db/moode-sqlite3.db "INSERT INTO cfg_system VALUES (140, 'first_use_help', 'y,y')"  
