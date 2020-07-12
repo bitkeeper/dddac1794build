@@ -220,15 +220,14 @@ ninja -C output/release
 
 * Copy result to the moode location with the mpd executables:
 ```
-sudo cp output/release/mpd /var/www/inc/mpd-0.21.23sr
+sudo cp output/release/mpd /var/local/mpd_versions/mpd-0.21.24sr
 ```
 
 Add this mpd version to the moode mpd selection list:
 ```
-cd /var/www
-sudo patch -b < /home/pi/dddac1794build/raspberrypi/software/tweaks/mpd_selective_resample/moode_mpdver_0.21.23sr.patch
+sudo echo "0.21.24sr; 0.21.24sr (selective resample)" >> /var/local/www/mpd_versions.conf
 ```
-Now you can select mpd version 0.21.23sr from the audio configure page.
+Now you can select mpd version 0.21.24sr from the audio configure page.
 
 * Enable  MPD Tweaks in MPD Configuration page
 * In MPD Configuration > MPD Tweaks > General Parameters add the option
