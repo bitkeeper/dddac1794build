@@ -322,6 +322,13 @@ cd /var/www/js
 sudo patch -b -p1 < ~/dddac1794build/raspberrypi/software/tweaks/moode_nativelazy_loading/native_lazy_loading.patch
 ```
 
+## Prevent MPD scanning of cue files:
+
+In the root of the music library create a file called .mpdignore with the following content: 
+```
+*.cue
+**/*.cue
+```
 
 
 ## Install of npm
@@ -334,11 +341,6 @@ Is about 60MB.
 
 ## Show album cover on playlist
 
-todo:
+work in progress
 
 
-===============================================================================================================
-currently needed when installing 6.6 develop branch:
-sudo sqlite3 /var/local/www/db/moode-sqlite3.db "INSERT INTO cfg_system VALUES (138, 'library_thumbnail_columns', '6/2 (Default)')"
-sudo sqlite3 /var/local/www/db/moode-sqlite3.db "INSERT INTO cfg_system VALUES (139, 'library_encoded_at', '0)')"
-sudo sqlite3 /var/local/www/db/moode-sqlite3.db "INSERT INTO cfg_system VALUES (140, 'first_use_help', 'y,y')"  
