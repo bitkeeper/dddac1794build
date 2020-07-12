@@ -1,0 +1,299 @@
+diff -Naur www/inc/playerlib.php moode/www/inc/playerlib.php
+--- www/inc/playerlib.php	2020-04-18 17:49:10.030459038 +0200
++++ moode/www/inc/playerlib.php	2020-04-19 14:19:58.059195965 +0200
+@@ -1584,6 +1584,22 @@
+ 	}
+ }
+ 
++/***
++ * split an one liner with multiple MPD parameters(separated by a ';' into an dictonary) into an array with param as key
++ * example parameter_str 'auto_format "no"; auto_resample "yes"'
++ * 
++ */
++function _split_parameter_string  ($parameters_str) {
++	$parameters=array();
++	foreach(explode(';', trim($parameters_str)) as $value) {			
++		$parts = explode(' ', trim($value), 2);
++		if( count($parts)== 2 ) {
++			$parameters [ trim($parts[0]) ] = trim($parts[1]);
++		 }
++	}
++	return $parameters;
++}
++
+ function updMpdConf($i2sdevice) {
+ 	$mpdcfg = sdbquery("SELECT param, value FROM cfg_mpd WHERE value!=''", cfgdb_connect());
+ 	$mpdver = substr($_SESSION['mpdver'], 0, 4);
+@@ -1593,11 +1593,16 @@
+ 	$data .= "# by the MPD configuration page.         \n";
+ 	$data .= "#########################################\n\n";
+ 
++	$mpd_general_params = array(); // // [paramname] = value
++	$mpd_dev_extra_params = array(); // [paramname] = value
++
+ 	foreach ($mpdcfg as $cfg) {
+ 		switch ($cfg['param']) {
+ 			// Code block or other params
+-			case 'metadata_to_use':
+-				$data .= $mpdver == '0.20' ? '' : $cfg['param'] . " \"" . $cfg['value'] . "\"\n";
++			case 'metadata_to_use':						
++				if($mpdver != '0.20') {
++					$mpd_general_params['metadata_to_use'] =$cfg['value'];
++				}
+ 				break;
+ 			case 'device':
+ 				$device = $cfg['value'];
+@@ -1612,7 +1612,9 @@
+ 				$dop = $cfg['value'];
+ 				break;
+ 			case 'audio_output_format':
+-				$data .= $cfg['value'] == 'disabled' ? '' : $cfg['param'] . " \"" . $cfg['value'] . "\"\n";
++				if($cfg['value'] != 'disabled') {
++					$mpd_general_params['audio_output_format'] =$cfg['value'];
++				}
+ 				break;
+ 			case 'samplerate_converter':
+ 				$samplerate_converter = $cfg['value'];
+@@ -1624,34 +1624,72 @@
+ 				$replay_gain_handler = $cfg['value'];
+ 				break;
+ 			case 'buffer_before_play':
+-				//$data .= $mpdver == '0.20' ? $cfg['param'] . " \"" . $cfg['value'] . "\"\n" : '';
+-				$data .=  '';
+ 				break;
++			// following three aren't applied to the general part but to default playback device
+ 			case 'auto_resample':
+-				$auto_resample = $cfg['value'];
++				//$auto_resample = $cfg['value'];
+ 				break;
+ 			case 'auto_channels':
+-				$auto_channels = $cfg['value'];
++				//$auto_channels = $cfg['value'];
+ 				break;
+ 			case 'auto_format':
+-				$auto_format = $cfg['value'];
+-				break;
++				//$auto_format = $cfg['value'];
++				break;			
+ 			case 'buffer_time':
+ 				$buffer_time = $cfg['value'];
+ 				break;
+ 			case 'period_time':
+ 				$period_time = $cfg['value'];
+ 				break;
+-			// Default param handling
+-			default:
+-				$data .= $cfg['param'] . " \"" . $cfg['value'] . "\"\n";
++			case 'mpd_tweaks':
++				$mpd_tweaks = $cfg['value'] == 1;
++				break;
++			case 'mpd_tweaks_unlock':
++				$mpd_tweaks_unlock = $cfg['value'] == 1;
++				break;
++			case 'mpd_extra_params':			
++				$mpd_extra_params = _split_parameter_string($cfg['value']) ;
++				break;
++			case 'mpd_dev_extra_params':
++				$mpd_dev_extra_params = _split_parameter_string($cfg['value']) ;
++				break;
++			// Default param handling			
++			default:			    
++				$mpd_general_params[$cfg['param']] = $cfg['value'];
+ 				if ($cfg['param'] == 'replaygain') {$replaygain = $cfg['value'];}
+ 				break;
+ 		}
+ 	}
++	
++	$mpd_tweaks = $mpd_tweaks and $mpd_tweaks_unlock; 
++
++	$mpd_general_params["max_connections"] = "128";
++
++	foreach($mpd_general_params as $param => $value) {
++		if( $mpd_tweaks and array_key_exists($param, $mpd_extra_params) ) {
++			$data .= "# ".$param." \"".$value."\"  <<< overriden by MPD tweaks\n";
++		}		 
++   	    else {
++			$data .= $param." \"".$value."\"\n";
++		}
++	}
++	
++	// only allow if the tweaks are unlock ind db and user enabled it in the user interface		
++	if($mpd_tweaks) {
++		$data .= "# --------- MPD General Tweaks ---------\n";
++		//mpd_general_params
++		foreach($mpd_extra_params as $param => $value) {
++			if( array_key_exists($param, $mpd_general_params) ) {
++				$data .= $param." ".$value."  # warning override setting from Moode!\n";
++			}		 
++			else {
++				$data .= $param." ".$value."\n";
++			}
++		}
++		$data .= "# --------------------------------------\n";
++	}
+ 
+ 	// Input
+-	$data .= "max_connections \"128\"\n";
+ 	$data .= "\n";
+ 	$data .= "decoder {\n";
+ 	$data .= "plugin \"ffmpeg\"\n";
+@@ -1667,21 +1667,62 @@
+ 	$data .= "threads \"" . $sox_multithreading . "\"\n";
+ 	$data .= "}\n\n";
+ 
+-	// ALSA local (outputs 1 - 5)
+-	$names = array (
+-		"name \"ALSA default\"\n" . "device \"hw:" . $device . ",0\"\n",
+-		"name \"ALSA crossfeed\"\n" . "device \"crossfeed\"\n",
+-		"name \"ALSA parametric eq\"\n" . "device \"eqfa4p\"\n",
+-		"name \"ALSA graphic eq\"\n" . "device \"alsaequal\"\n",
+-		"name \"ALSA polarity inversion\"\n" . "device \"invpolarity\"\n"
++    // common for all ALSA outputs
++	$common_output_params = Array(
++		"type" => "alsa",
++		"mixer_type" => $mixertype,
++		"dop" => $dop
++	);	
++
++	if( $mixertype == 'hardware' ) {
++		$mixer_setting = Array (
++			"mixer_control" => $hwmixer,
++			"mixer_device" => $device, 
++			"mixer_index" => "0" 		
+ 		);
+-	foreach ($names as $name) {
+-		$data .= "audio_output {\n";
+-		$data .= "type \"alsa\"\n";
+-		$data .= $name;
+-		$data .= "mixer_type \"" . $mixertype . "\"\n";
+-		$data .= $mixertype == 'hardware' ? "mixer_control \"" . $hwmixer . "\"\n" . "mixer_device \"hw:" . $device . "\"\n" . "mixer_index \"0\"\n" : '';
+-		$data .= "dop \"" . $dop . "\"\n";
++		$common_output_params= array_merge($common_output_params, $mixer_setting);
++	}
++
++	// ALSA local (outputs 1 - 5)
++	$outputs = array (
++		Array("name" => "ALSA default", 
++			  "device" => "hw:" . $device . ",0"), 
++		Array("name" => "ALSA crossfeed" ,
++		      "device" => "crossfeed" ), 
++		Array("name" => "ALSA parametric eq",
++		      "device" => "eqfa4p" ),
++		Array("name" => "ALSA graphic eq",
++		      "device" => "alsaequal" ),
++		Array("name" => "ALSA polarity inversion",
++		  	  "device" => "invpolarity")
++	);
++
++	foreach ($outputs as $output) {
++		// only apply device tweak to default output device
++		$default_output = $output["name"] == "ALSA default"; 		
++		$data .= "audio_output {\n";		
++		$output_params = array_merge($output, $common_output_params);	
++
++        foreach($output_params as $param => $value)	{
++			if( $mpd_tweaks and $default_output and array_key_exists($param, $mpd_dev_extra_params) ) {
++				$data .= "  #".$param." \"".$value."\" <<< overridden by MPD tweaks\n";
++			}		 
++			   else {
++				$data .= "  ".$param." \"".$value."\"\n";
++			}
++		}
++
++		if($mpd_tweaks and $default_output) {
++			$data .= "  # MPD Tweaks\n";
++			foreach($mpd_dev_extra_params as $param => $value)	{
++				if( array_key_exists($param, $output_params) ) {
++					$data .= "  ".$param." ".$value." # warning overridde setting from Moode!\n";
++				}		 
++					else {
++					$data .= "  ".$param." ".$value."\n";
++				}				
++			}		
++		}
+ 		$data .= "}\n\n";
+ 	}
+ 
+diff -Naur www/mpd-config.php moode/www/mpd-config.php
+--- www/mpd-config.php	2020-04-18 17:49:10.070457097 +0200
++++ moode/www/mpd-config.php	2020-04-19 12:27:21.511633317 +0200
+@@ -63,6 +63,10 @@
+ 	submitJob('mpdcfg', $queueargs, $title, $message, $duration);
+ }
+ 
++if (isset($_POST['update_mpd_tweaks']))  {	
++	cfgdb_update('cfg_mpd', $dbh, 'mpd_tweaks', $_POST['conf']['mpd_tweaks']);
++}	
++
+ // Load settings
+ $result = cfgdb_read('cfg_mpd', $dbh);
+ $mpdconf = array();
+@@ -200,6 +200,15 @@
+ $_mpd_select['zeroconf_name'] = $mpdconf['zeroconf_name'];
+ */
+ 
++// mpd-tweaks
++$_select['alsa_tweaks1'] .= "<input type=\"radio\" name=\"conf[mpd_tweaks]\" id=\"togglealsa_tweaks1\" value=\"1\" " . (($mpdconf['mpd_tweaks'] == 1) ? "checked=\"checked\"" : "") . ">\n";
++$_select['alsa_tweaks0'] .= "<input type=\"radio\" name=\"conf[mpd_tweaks]\" id=\"togglealsa_tweaks2\" value=\"0\" " . (($mpdconf['mpd_tweaks'] == 0) ? "checked=\"checked\"" : "") . ">\n";
++
++$_mpd_tweaks_unlock = ($mpdconf['mpd_tweaks_unlock'] == 0) ? "style=\"visibility:hidden;\"" : ""; // the prevents that the tweaks are even visible
++$_mpd_tweaks_visible_style = ($mpdconf['mpd_tweaks'] == 0 or $mpdconf['mpd_tweaks_unlock'] == 0) ? "style=\"visibility:hidden;\"" : ""; // help to hide or show mpd tweak settings
++$mpdconf[mpd_extra_params]=htmlspecialchars($mpdconf[mpd_extra_params]); // escape the mpd params string
++$mpdconf[mpd_dev_extra_params]=htmlspecialchars($mpdconf[mpd_dev_extra_params]); // escape the mpd params string
++
+ waitWorker(1, 'mpd-config');
+ 
+ $tpl = "mpd-config.html";
+diff -Naur www/templates/mpd-config.html moode/www/templates/mpd-config.html
+--- www/templates/mpd-config.html	2020-04-18 17:49:10.090456126 +0200
++++ moode/www/templates/mpd-config.html	2020-04-19 14:11:14.705621851 +0200
+@@ -268,6 +268,49 @@
+ 					</span>
+                 </div>
+             </div-->
++			<div class="control-group" $_mpd_tweaks_unlock>
++			    <legend>MPD Tweaks</legend>
++				<label class="control-label">Enable MPD Tweaks</label>
++				<div class="controls">
++					<div class="toggle">
++	                    <label class="toggle-radio" for="togglealsa_tweaks2">ON</label>
++						$_select[alsa_tweaks1]
++						<label class="toggle-radio" for="togglealsa_tweaks1">OFF</label>
++						$_select[alsa_tweaks0]					
++					</div>
++					<div style="display: inline-block; vertical-align: top; margin-top: 4px;">
++						<button class="btn btn-primary btn-small btn-submit" type="submit" name="update_mpd_tweaks" value="novalue">Set</button>
++						<a aria-label="Help" class="info-toggle" data-cmd="info-mpd-tweaks" href="#notarget"><i class="fas fa-info-circle"></i></a>
++					</div>
++					<span id="info-mpd-tweaks" class="help-block-configs help-block-margin2 hide">
++						Enable manualy tweaking of the MPD options. Only enable this option if you know what you doing! Tweaks can lead to unasable configuration.
++                    </span>
++					<span class="help-block-configs help-block-margin">
++	                    Enabling MPD tweaks  may lead to an unusable system!<br>
++					</span>
++				</div>
++			</div>
++
++		   <div class="control-group" $_mpd_tweaks_visible_style>  
++                <label class="control-label" for="mpd-extra-params">General parameters</label>
++                <div class="controls">				
++                    <input class="input-large" type="text" id="mpd-extra-params" name="conf[mpd_extra_params]" value="$mpdconf[mpd_extra_params]">
++					<span class="help-block-configs help-block-margin">
++						Provide additional general MPD parameters. See MPD.conf for more information. Multiple parameters are separated by a ";".
++					</span>
++                </div>
++            </div>
++
++		   <div class="control-group" $_mpd_tweaks_visible_style>  
++                <label class="control-label" for="mpd-dev-extra-params">Device parameters</label>
++                <div class="controls">				
++                    <input class="input-large" type="text" id="mpd-dev-extra-params" name="conf[mpd_dev_extra_params]" value="$mpdconf[mpd_dev_extra_params]">					
++					<span class="help-block-configs help-block-margin">
++						Provide additional MPD parameters to the default output device. See MPD.conf for more information. Multiple parameters are separated by a ";".
++					</span>					
++                </div>
++            </div>
++
+ 		</fieldset>
+     </form>
+ </div>
