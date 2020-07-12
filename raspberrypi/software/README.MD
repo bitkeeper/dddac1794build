@@ -133,11 +133,11 @@ sudo raspi-config
 ```
 cd ~
 sudo apt-get install python-dev python-pip libfreetype6-dev libjpeg-dev build-essential
-sudo -H pip install --upgrade luma.oled luma.core==1.13
+sudo -H pip install --upgrade luma.oled==3.4 luma.core==1.13
 sudo pip install python-mpd2 gpiozero
 ```
 
-vesion luma.core 1.13 is required as later version will only work with Python3.
+vesion luma.oled=3.4 and luma.core 1.13 are required as later version will only work with Python3.
 
 
 Install service for display:
