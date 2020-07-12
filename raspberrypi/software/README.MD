@@ -161,9 +161,11 @@ sqlite3 /var/local/www/db/moode-sqlite3.db 'UPDATE cfg_mpd  SET value="1" where 
 
 ## Upgrade to MPD 0.21.23 and apply Selective Resample patch
 
+*Beside 0.21.23 there are also patches for 0.21.24 and 0.21.20 available.*
+
 ```
 cd ~
-wget http://www.musicpd.org/download/mpd/0.21/mpd-0.21.23.tar.xz
+wget http://www.musicpd.org/download/mpd/0.21/mpd-0.21.24.tar.xz
 tar xf mpd-0.21.23.tar.xz
 cd mpd-0.21.23
 sudo patch -b -p1 < /home/pi/dddac1794build/raspberrypi/software/tweaks/mpd_selective_resample/mpd_0.21.23_selective_44k_resample.patch

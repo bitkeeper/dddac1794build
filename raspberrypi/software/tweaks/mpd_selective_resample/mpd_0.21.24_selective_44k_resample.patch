@@ -1,0 +1,214 @@
+diff --git a/src/AudioFormat.cxx b/src/AudioFormat.cxx
+index 8d3440266..ec7f2fb9f 100644
+--- a/src/AudioFormat.cxx
++++ b/src/AudioFormat.cxx
+@@ -22,15 +22,52 @@
+ #include "util/StringFormat.hxx"
+ 
+ #include <assert.h>
++#include <map>
++
++/**
++ * If source is based on 44.1k get nearest valid 44.1k variant from the target sample rate.
++ * For example if the source is 44.1k and the target is 96k it will return 88.2k.
++ *
++ * param source_rate the samplerate of the current source
++ * param target_rate the samplerate of which the source should be converted to.
++ * return the final sample rate of which the source should be converted to
++ */
++unsigned
++determine_selective_resample_rate(unsigned source_rate, unsigned target_rate) noexcept;
++
++unsigned
++determine_selective_resample_rate(unsigned source_rate, unsigned target_rate) noexcept
++{
++	unsigned out_sample_rate = source_rate;
++	const std::map<unsigned, unsigned> lut48to41 = {
++		{384000, 352800 },
++		{192000, 176400 },
++	 	 {96000,  88200 },
++		 {48000,  44100 }
++	};	
++
++	if( source_rate % 44100 == 0 && 
++	    target_rate % 48000 == 0 && 
++	    lut48to41.find(target_rate) != lut48to41.end() )
++		out_sample_rate = lut48to41.find(target_rate)->second;
++	else if(target_rate)
++		out_sample_rate = target_rate;
++
++    return out_sample_rate;
++}
+ 
+ void
+-AudioFormat::ApplyMask(AudioFormat mask) noexcept
++AudioFormat::ApplyMask(AudioFormat mask, bool selective_44k_resample) noexcept
+ {
+ 	assert(IsValid());
+ 	assert(mask.IsMaskValid());
+ 
+-	if (mask.sample_rate != 0)
+-		sample_rate = mask.sample_rate;
++	if (mask.sample_rate != 0) {
++		if(selective_44k_resample)
++			sample_rate = determine_selective_resample_rate(sample_rate, mask.sample_rate);
++		else
++			sample_rate = mask.sample_rate;
++	}
+ 
+ 	if (mask.format != SampleFormat::UNDEFINED)
+ 		format = mask.format;
+diff --git a/src/AudioFormat.hxx b/src/AudioFormat.hxx
+index 7e411b12a..4284c39a1 100644
+--- a/src/AudioFormat.hxx
++++ b/src/AudioFormat.hxx
+@@ -125,12 +125,12 @@ struct AudioFormat {
+ 		return !(*this == other);
+ 	}
+ 
+-	void ApplyMask(AudioFormat mask) noexcept;
++	void ApplyMask(AudioFormat mask, bool selective_44k_resample = false) noexcept;
+ 
+ 	gcc_pure
+-	AudioFormat WithMask(AudioFormat mask) const noexcept {
++	AudioFormat WithMask(AudioFormat mask, bool selective_44k_resample = false) const noexcept {
+ 		AudioFormat result = *this;
+-		result.ApplyMask(mask);
++		result.ApplyMask(mask, selective_44k_resample);
+ 		return result;
+ 	}
+ 
+diff --git a/src/Main.cxx b/src/Main.cxx
+index 7ca83c111..5ef1eb50c 100644
+--- a/src/Main.cxx
++++ b/src/Main.cxx
+@@ -335,6 +335,8 @@ initialize_decoder_and_player(const ConfigData &config,
+ 		std::throw_with_nested(FormatRuntimeError("Failed to parse line %i",
+ 							  param->line));
+ 	}
++
++	partition.pc.SetSelectiveResampleMode( config.GetBool(ConfigOption::SELECTIVE_44K_RESAMPLE, false) );
+ }
+ 
+ inline void
+diff --git a/src/config/Option.hxx b/src/config/Option.hxx
+index 03da8e378..b0fd068fe 100644
+--- a/src/config/Option.hxx
++++ b/src/config/Option.hxx
+@@ -79,6 +79,7 @@ enum class ConfigOption {
+ 	DESPOTIFY_USER,
+ 	DESPOTIFY_PASSWORD,
+ 	DESPOTIFY_HIGH_BITRATE,
++	SELECTIVE_44K_RESAMPLE,	
+ 	MAX
+ };
+ 
+diff --git a/src/config/Templates.cxx b/src/config/Templates.cxx
+index 4da8031d4..932b77b4e 100644
+--- a/src/config/Templates.cxx
++++ b/src/config/Templates.cxx
+@@ -74,6 +74,7 @@ const ConfigTemplate config_param_templates[] = {
+ 	{ "despotify_user", false, true },
+ 	{ "despotify_password", false, true },
+ 	{ "despotify_high_bitrate", false, true },
++	{ "selective_44k_resample" }
+ };
+ 
+ static constexpr unsigned n_config_param_templates =
+diff --git a/src/decoder/Control.cxx b/src/decoder/Control.cxx
+index 4962e194b..7d800d3b8 100644
+--- a/src/decoder/Control.cxx
++++ b/src/decoder/Control.cxx
+@@ -27,10 +27,12 @@
+ 
+ DecoderControl::DecoderControl(Mutex &_mutex, Cond &_client_cond,
+ 			       const AudioFormat _configured_audio_format,
++			       const bool _selective_44k_resample,
+ 			       const ReplayGainConfig &_replay_gain_config) noexcept
+ 	:thread(BIND_THIS_METHOD(RunThread)),
+ 	 mutex(_mutex), client_cond(_client_cond),
+ 	 configured_audio_format(_configured_audio_format),
++	 selective_44k_resample(_selective_44k_resample),
+ 	 replay_gain_config(_replay_gain_config) {}
+ 
+ DecoderControl::~DecoderControl() noexcept
+@@ -61,7 +63,7 @@ DecoderControl::SetReady(const AudioFormat audio_format,
+ 	assert(audio_format.IsValid());
+ 
+ 	in_audio_format = audio_format;
+-	out_audio_format = audio_format.WithMask(configured_audio_format);
++	out_audio_format = audio_format.WithMask(configured_audio_format, selective_44k_resample);
+ 
+ 	seekable = _seekable;
+ 	total_time = _duration;
+diff --git a/src/decoder/Control.hxx b/src/decoder/Control.hxx
+index b630a7283..961aae5b3 100644
+--- a/src/decoder/Control.hxx
++++ b/src/decoder/Control.hxx
+@@ -175,6 +175,8 @@ public:
+ 	const ReplayGainConfig replay_gain_config;
+ 	ReplayGainMode replay_gain_mode = ReplayGainMode::OFF;
+ 
++	const bool selective_44k_resample;
++
+ 	float replay_gain_db = 0;
+ 	float replay_gain_prev_db = 0;
+ 
+@@ -188,6 +190,7 @@ public:
+ 	 */
+ 	DecoderControl(Mutex &_mutex, Cond &_client_cond,
+ 		       const AudioFormat _configured_audio_format,
++		       const bool _selective_44k_resample,
+ 		       const ReplayGainConfig &_replay_gain_config) noexcept;
+ 	~DecoderControl() noexcept;
+ 
+diff --git a/src/player/Control.cxx b/src/player/Control.cxx
+index b2042f1e5..cce9c8932 100644
+--- a/src/player/Control.cxx
++++ b/src/player/Control.cxx
+@@ -35,7 +35,8 @@ PlayerControl::PlayerControl(PlayerListener &_listener,
+ 	 buffer_chunks(_buffer_chunks),
+ 	 configured_audio_format(_configured_audio_format),
+ 	 thread(BIND_THIS_METHOD(RunThread)),
+-	 replay_gain_config(_replay_gain_config)
++	 replay_gain_config(_replay_gain_config),
++	 selective_44k_resample(false)
+ {
+ }
+ 
+diff --git a/src/player/Control.hxx b/src/player/Control.hxx
+index 542536067..4212a50c7 100644
+--- a/src/player/Control.hxx
++++ b/src/player/Control.hxx
+@@ -229,6 +229,8 @@ class PlayerControl final : public AudioOutputClient {
+ 
+ 	const ReplayGainConfig replay_gain_config;
+ 
++	bool selective_44k_resample;
++
+ 	FloatDuration total_play_time = FloatDuration::zero();
+ 
+ public:
+@@ -318,6 +320,10 @@ public:
+ 		replay_gain_mode = _mode;
+ 	}
+ 
++	void SetSelectiveResampleMode(bool enable) noexcept {
++		selective_44k_resample = enable;
++	}
++
+ 	/**
+ 	 * Like ReadTaggedSong(), but locks and unlocks the object.
+ 	 */
+diff --git a/src/player/Thread.cxx b/src/player/Thread.cxx
+index 286855136..b10bfb0ce 100644
+--- a/src/player/Thread.cxx
++++ b/src/player/Thread.cxx
+@@ -1153,6 +1153,7 @@ try {
+ 
+ 	DecoderControl dc(mutex, cond,
+ 			  configured_audio_format,
++			  selective_44k_resample,
+ 			  replay_gain_config);
+ 	dc.StartThread();
+ 
