@@ -152,7 +152,7 @@ sudo systemctl start mpddisplay.service
 
 ```
 cd /var/www
-sudo patch -b -p2 < /home/pi/dddac1794build/raspberrypi/software/tweaks/moode_mpd_tweaks/moode_6.5.1_mpd_tweaks.patch
+sudo patch -b -p2 < /home/pi/dddac1794build/raspberrypi/software/tweaks/moode_mpd_tweaks/moode_6.6.0_mpd_tweaks.patch
 sqlite3 /var/local/www/db/moode-sqlite3.db < /home/pi/dddac1794build/raspberrypi/software/tweaks/moode_mpd_tweaks/moode_mpd_tweaks.sql
 sqlite3 /var/local/www/db/moode-sqlite3.db 'UPDATE cfg_mpd  SET value="1" where param="mpd_tweaks_unlock";'
 /home/pi/dddac1794build/raspberrypi/software/util/stopit.sh
@@ -258,8 +258,7 @@ sudo ln -s /home/pi/dddac1794build/raspberrypi/software/tweaks/moode_albumcols/m
 
 
 ## Moode: use search priority priority  OriginalRelease, OriginalYear, Date insteadof only Date
-
-_No need for this patch anymore, is partof the 6.6 code tree_
+_Not longer needed; integrated in moOde 6.6_
 
 When you are searching for albums on year or year range and an album is remastered and/or released 
 probably you don't want that date, but the original date of release (if present).
@@ -272,7 +271,7 @@ sudo patch -p2 < home/pi/dddac1794build/raspberrypi/software/tweaks/moode_albumy
 Note: This fix will be part of the moOde 6.6.x release.
 
 ## Moode: show sound quality overlays
-
+_Not longer needed; partly integrated in moOde 6.6_
 _In 6.6 support for the encoded at information is added. Only the triangle overlays didn't make it to the source tree. Need to change the patch._
 
 Add an overlay to each album thumb in the library.
@@ -311,6 +310,7 @@ New:
 ```
 
 ## Use native lazy loading
+_Not longer needed; integrated in moOde 6.6_
 
 Default a library is supported, however modern browser support lazy loading of images native.
 https://www.sitepoint.com/five-techniques-lazy-load-images-website-performance/
