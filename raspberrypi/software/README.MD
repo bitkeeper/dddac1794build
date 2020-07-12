@@ -3,10 +3,10 @@ The target is a DDDAC 1794 NOS with a Raspberry Pi. See the system description i
 If that doesn't match you system, you can still use the installation procedure, but use it selective.
 
 
-# Install Moode 6.5.1
+# Install Moode 6.6.0
 
 ## Install the image
-* Download image from https://github.com/moode-player/moode/releases/download/r651prod/moode-r651-iso.zip
+* Download image from https://github.com/moode-player/moode/releases/download/r651prod/moode-r660-iso.zip
 * Unpack zip
 * Use Win32 Disk Imager tp write img to SD card <image>
 * Wait until the leds on the pi stop blinking
@@ -71,11 +71,16 @@ Directory content:
 * tweaks - 
   * hifiberry-digi-pro-remap - allow 44k1 based crystal to be used with Allo Isolator (requires hardware mod).
   * moode_albumcols - alternative css @media query for more albums on PC and tablet screens.
-  * moode_albumyear - make the albumyear search priority  OriginalRelease, OriginalYear, Date insteadof only Date.
-  * moode_mpd_tweaks - Moode doesn't support all mpd options, with this tweak you can add in the mpd config screen.
+  * [obsulute|integrated] moode_albumsearch_trim - strip whitespace before and after. ensures better search during live typing.
+  * [obsolute|integrated] moode_albumyear - make the albumyear search priority  OriginalRelease, OriginalYear, Date insteadof only Date.
+  * moode_mpd_tweaks - Moode doesn't support all mpd options, with this tweak you can add in the mpd config screen.  
+  * [obsolute|integrated] moode_nativelazy_loading - use browser native lazy loading for album art by browser that support it.
+  * moode_responsive_orientationchange
+  * [obsolute|integrated]moode_sq_overlay
   * mpd_selective_resample - Patch MPD (tested on 0.21.20 and 0.21.23) to support selective resample and add it selectable to the Moode MPD version selector.
 * util - utils to easy moode/mpd development easier.
 
+Some of the patches are already integrated and part of the moOde source tree.
 
 ## Prepare install
 
@@ -138,6 +143,7 @@ sudo pip install python-mpd2 gpiozero
 ```
 
 vesion luma.oled=3.4 and luma.core 1.13 are required as later version will only work with Python3.
+_Need to port this daemon from py2 to py3_
 
 
 Install service for display:
@@ -219,6 +225,7 @@ output/release
 ninja -C output/release
 ```
 
+Deployment of own build mpd execs has become easier with moOde 6.6.0, the location is moved out of the source tree to /var/local/www/mpd_versions and patches is accept to load the available mpds from /var/local/www/mpd_versions.conf.
 * Copy result to the moode location with the mpd executables:
 ```
 sudo cp output/release/mpd /var/local/www/mpd_versions/mpd-0.21.25sr
@@ -261,23 +268,67 @@ Or in case of development replace the last line by:
 sudo ln -s /home/pi/dddac1794build/raspberrypi/software/tweaks/moode_albumcols/moode_additional_media.css /var/www/css/moodecustom.css
 ```
 
+## More responsive orientation change
+In the header.php remove the orientation change handler.
 
-## Moode: use search priority priority  OriginalRelease, OriginalYear, Date insteadof only Date
+Original:
+```html
+<body onorientationchange="javascript:location.reload(true); void 0;">
+```
+
+New:
+```html
+<body >
+```
+
+## Prevent MPD scanning of cue files:
+
+In the root of the music library create a file called .mpdignore with the following content: 
+```
+*.cue
+**/*.cue
+```
+
+## Install of npm
+
+```
+ap-get install npm
+```
+Is about 60MB.
+
+
+## Show album cover on playlist
+
+work in progress
+
+
+# Obsolute tweaks
+Most of this tweaks are now integrated into the source tree of moOde.
+
+## After autocompletion search results 
+
+_Is part of 6.6 sourcetree_
+trim search value 
+
+todo: patch
+
+
+## Use native lazy loading
 _Not longer needed; integrated in moOde 6.6_
 
-When you are searching for albums on year or year range and an album is remastered and/or released 
-probably you don't want that date, but the original date of release (if present).
+Default a library is supported, however modern browser support lazy loading of images native.
+https://www.sitepoint.com/five-techniques-lazy-load-images-website-performance/
+https://addyosmani.com/blog/lazy-loading/
+https://caniuse.com/#feat=loading-lazy-attr
 
 ```
-cd /var/www
-sudo patch -p2 < home/pi/dddac1794build/raspberrypi/software/tweaks/moode_albumyear/moode_albumyear.651.patch
+cd /var/www/js
+sudo patch -b -p1 < ~/dddac1794build/raspberrypi/software/tweaks/moode_nativelazy_loading/native_lazy_loading.patch
 ```
-
-Note: This fix will be part of the moOde 6.6.x release.
 
 ## Moode: show sound quality overlays
 _Not longer needed; partly integrated in moOde 6.6_
-_In 6.6 support for the encoded at information is added. Only the triangle overlays didn't make it to the source tree. Need to change the patch._
+_In 6.6 support for the encoded at information is added. Only the triangle overlays didn't make it to the source tree. Need to change the original to support those triangles again patch._
 
 Add an overlay to each album thumb in the library.
 The overlay adds a colored triangle with a the samplerate.
@@ -294,58 +345,16 @@ todo:
 - update to use base of 6.6
 - use css triangle instead of images. (see https://css-tricks.com/the-shapes-of-css/)
 
-## After autocompletion search results 
-
-_Is part of 6.6 sourcetree_
-trim search value 
-
-todo: patch
-
-## More responsive orientation change
-In the header.php remove the orientation change handler.
-
-Original:
-```html
-<body onorientationchange="javascript:location.reload(true); void 0;">
-```
-
-New:
-```html
-<body >
-```
-
-## Use native lazy loading
+## Moode: use search priority priority  OriginalRelease, OriginalYear, Date insteadof only Date
 _Not longer needed; integrated in moOde 6.6_
 
-Default a library is supported, however modern browser support lazy loading of images native.
-https://www.sitepoint.com/five-techniques-lazy-load-images-website-performance/
-https://addyosmani.com/blog/lazy-loading/
-https://caniuse.com/#feat=loading-lazy-attr
+When you are searching for albums on year or year range and an album is remastered and/or released 
+probably you don't want that date, but the original date of release (if present).
 
 ```
-cd /var/www/js
-sudo patch -b -p1 < ~/dddac1794build/raspberrypi/software/tweaks/moode_nativelazy_loading/native_lazy_loading.patch
+cd /var/www
+sudo patch -p2 < home/pi/dddac1794build/raspberrypi/software/tweaks/moode_albumyear/moode_albumyear.651.patch
 ```
 
-## Prevent MPD scanning of cue files:
-
-In the root of the music library create a file called .mpdignore with the following content: 
-```
-*.cue
-**/*.cue
-```
-
-
-## Install of npm
-
-```
-ap-get install npm
-```
-Is about 60MB.
-
-
-## Show album cover on playlist
-
-work in progress
-
+Note: This fix will be part of the moOde 6.6.x release.
 
