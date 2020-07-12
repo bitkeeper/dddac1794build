@@ -159,16 +159,17 @@ sqlite3 /var/local/www/db/moode-sqlite3.db 'UPDATE cfg_mpd  SET value="1" where 
 /home/pi/dddac1794build/raspberrypi/software/util/startit.sh
 ```
 
-## Upgrade to MPD 0.21.24 and apply Selective Resample patch
+## Upgrade to MPD 0.21.25 and apply Selective Resample patch
 
-*Beside 0.21.24 there are also patches for 0.21.23 and 0.21.20 available.*
+*Beside 0.21.25 there are also patches for 0.21.24, 0.21.23 and 0.21.20 available.*
 
+Patch of 0.21.24 also works with 0.21.25.
 ```
 cd ~
-wget http://www.musicpd.org/download/mpd/0.21/mpd-0.21.24.tar.xz
-tar xf mpd-0.21.24.tar.xz
-cd mpd-0.21.24
-sudo patch -b -p1 < /home/pi/dddac1794build/raspberrypi/software/tweaks/mpd_selective_resample/mpd_0.21.24_selective_44k_resample.patch
+wget http://www.musicpd.org/download/mpd/0.21/mpd-0.21.25.tar.xz
+tar xf mpd-0.21.25.tar.xz
+cd mpd-0.21.25
+sudo patch -b -p1 < /home/pi/dddac1794build/raspberrypi/software/tweaks/mpd_selective_resample/mpd_0.21.25_selective_44k_resample.patch
 meson . output/release --buildtype=release -Db_ndebug=true
 meson configure \
 -Dalsa=enabled \
@@ -220,20 +221,24 @@ ninja -C output/release
 
 * Copy result to the moode location with the mpd executables:
 ```
-sudo cp output/release/mpd /var/local/mpd_versions/mpd-0.21.24sr
+sudo cp output/release/mpd /var/local/www/mpd_versions/mpd-0.21.25sr
 ```
 
 Add this mpd version to the moode mpd selection list:
 ```
-sudo echo "0.21.24sr; 0.21.24sr (selective resample)" >> /var/local/www/mpd_versions.conf
+sudo a+w /var/local/www/mpd_versions.conf
+sudo echo "0.21.25sr; 0.21.25sr (selective resample)" >> /var/local/www/mpd_versions.conf
+sudo chmod go-w /var/local/www/mpd_versions.conf
 ```
-Now you can select mpd version 0.21.24sr from the audio configure page.
+Now you can select mpd version 0.21.25sr from the audio configure page.
 
 * Enable  MPD Tweaks in MPD Configuration page
 * In MPD Configuration > MPD Tweaks > General Parameters add the option
 ```
 selective_44k_resample "yes"
 ```
+
+This setting is only allowed for mpd with the selective resample patch applied.
 
 * Press the save button at the top of the screen
 
