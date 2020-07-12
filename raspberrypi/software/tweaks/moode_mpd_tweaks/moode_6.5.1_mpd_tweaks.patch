@@ -55,13 +55,8 @@ diff -Naur www/inc/playerlib.php moode/www/inc/playerlib.php
  			case 'samplerate_converter':
  				$samplerate_converter = $cfg['value'];
 @@ -1624,33 +1624,75 @@
- 				$replay_gain_handler = $cfg['value'];
- 				break;
  			case 'buffer_before_play':
--				$data .= $mpdver == '0.20' ? $cfg['param'] . " \"" . $cfg['value'] . "\"\n" : '';
-+				if($mpdver != '0.20') {
-+					$mpd_general_params['buffer_before_play'] =$cfg['value'];
-+				}
+				$data .= '';
  				break;
 +			// following three aren't applied to the general part but to default playback device
  			case 'auto_resample':

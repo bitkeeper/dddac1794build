@@ -133,11 +133,11 @@ sudo raspi-config
 ```
 cd ~
 sudo apt-get install python-dev python-pip libfreetype6-dev libjpeg-dev build-essential
-sudo -H pip install --upgrade luma.oled luma.core==1.13
+sudo -H pip install --upgrade luma.oled==3.4 luma.core==1.13
 sudo pip install python-mpd2 gpiozero
 ```
 
-vesion luma.core 1.13 is required as later version will only work with Python3.
+vesion luma.oled=3.4 and luma.core 1.13 are required as later version will only work with Python3.
 
 
 Install service for display:
@@ -152,23 +152,23 @@ sudo systemctl start mpddisplay.service
 
 ```
 cd /var/www
-sudo patch -b -p2 < /home/pi/dddac1794build/raspberrypi/software/tweaks/moode_mpd_tweaks/moode_6.5.1_mpd_tweaks.patch
+sudo patch -b -p2 < /home/pi/dddac1794build/raspberrypi/software/tweaks/moode_mpd_tweaks/moode_6.6.0_mpd_tweaks.patch
 sqlite3 /var/local/www/db/moode-sqlite3.db < /home/pi/dddac1794build/raspberrypi/software/tweaks/moode_mpd_tweaks/moode_mpd_tweaks.sql
 sqlite3 /var/local/www/db/moode-sqlite3.db 'UPDATE cfg_mpd  SET value="1" where param="mpd_tweaks_unlock";'
 /home/pi/dddac1794build/raspberrypi/software/util/stopit.sh
 /home/pi/dddac1794build/raspberrypi/software/util/startit.sh
 ```
 
-## Upgrade to MPD 0.21.23 and apply Selective Resample patch
+## Upgrade to MPD 0.21.24 and apply Selective Resample patch
 
-*Beside 0.21.23 there are also patches for 0.21.24 and 0.21.20 available.*
+*Beside 0.21.24 there are also patches for 0.21.23 and 0.21.20 available.*
 
 ```
 cd ~
 wget http://www.musicpd.org/download/mpd/0.21/mpd-0.21.24.tar.xz
-tar xf mpd-0.21.23.tar.xz
-cd mpd-0.21.23
-sudo patch -b -p1 < /home/pi/dddac1794build/raspberrypi/software/tweaks/mpd_selective_resample/mpd_0.21.23_selective_44k_resample.patch
+tar xf mpd-0.21.24.tar.xz
+cd mpd-0.21.24
+sudo patch -b -p1 < /home/pi/dddac1794build/raspberrypi/software/tweaks/mpd_selective_resample/mpd_0.21.24_selective_44k_resample.patch
 meson . output/release --buildtype=release -Db_ndebug=true
 meson configure \
 -Dalsa=enabled \
@@ -220,15 +220,14 @@ ninja -C output/release
 
 * Copy result to the moode location with the mpd executables:
 ```
-sudo cp output/release/mpd /var/www/inc/mpd-0.21.23sr
+sudo cp output/release/mpd /var/local/mpd_versions/mpd-0.21.24sr
 ```
 
 Add this mpd version to the moode mpd selection list:
 ```
-cd /var/www
-sudo patch -b < /home/pi/dddac1794build/raspberrypi/software/tweaks/mpd_selective_resample/moode_mpdver_0.21.23sr.patch
+sudo echo "0.21.24sr; 0.21.24sr (selective resample)" >> /var/local/www/mpd_versions.conf
 ```
-Now you can select mpd version 0.21.23sr from the audio configure page.
+Now you can select mpd version 0.21.24sr from the audio configure page.
 
 * Enable  MPD Tweaks in MPD Configuration page
 * In MPD Configuration > MPD Tweaks > General Parameters add the option
@@ -259,8 +258,7 @@ sudo ln -s /home/pi/dddac1794build/raspberrypi/software/tweaks/moode_albumcols/m
 
 
 ## Moode: use search priority priority  OriginalRelease, OriginalYear, Date insteadof only Date
-
-_No need for this patch anymore, is partof the 6.6 code tree_
+_Not longer needed; integrated in moOde 6.6_
 
 When you are searching for albums on year or year range and an album is remastered and/or released 
 probably you don't want that date, but the original date of release (if present).
@@ -273,7 +271,7 @@ sudo patch -p2 < home/pi/dddac1794build/raspberrypi/software/tweaks/moode_albumy
 Note: This fix will be part of the moOde 6.6.x release.
 
 ## Moode: show sound quality overlays
-
+_Not longer needed; partly integrated in moOde 6.6_
 _In 6.6 support for the encoded at information is added. Only the triangle overlays didn't make it to the source tree. Need to change the patch._
 
 Add an overlay to each album thumb in the library.
@@ -312,6 +310,7 @@ New:
 ```
 
 ## Use native lazy loading
+_Not longer needed; integrated in moOde 6.6_
 
 Default a library is supported, however modern browser support lazy loading of images native.
 https://www.sitepoint.com/five-techniques-lazy-load-images-website-performance/
