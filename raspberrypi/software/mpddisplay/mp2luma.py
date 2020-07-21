@@ -121,13 +121,13 @@ class MpdDisplay (object):
         SOURCE_LED.off()
         self.press_duration = datetime.now()
 
-    def source_released(self):        
+    def source_released(self):
         press_duration = datetime.now() - self.press_duration
         if press_duration >  timedelta(milliseconds=500):
             self.client.pause()
             # if self.client.status().state == 'play':
             #   SOURCE_LED.on()
-        elif press_duration >  timedelta(milliseconds=100) and self.source_index == 0:
+        elif press_duration >  timedelta(milliseconds=100):
             self.source_select_pressed(None)
 
         SOURCE_LED.on()            
