@@ -1,5 +1,5 @@
 diff --git a/src/pcm/SoxrResampler.cxx b/src/pcm/SoxrResampler.cxx
-index 411e79b43..f1b3fe7e6 100644
+index 411e79b43..071e81aae 100644
 --- a/src/pcm/SoxrResampler.cxx
 +++ b/src/pcm/SoxrResampler.cxx
 @@ -29,6 +29,8 @@
@@ -152,7 +152,7 @@ index 411e79b43..f1b3fe7e6 100644
  	FormatDebug(soxr_domain,
  		    "soxr converter '%s'",
  		    soxr_quality_name(recipe));
-@@ -108,9 +208,13 @@ SoxrPcmResampler::Open(AudioFormat &af, unsigned new_sample_rate)
+@@ -108,14 +208,19 @@ SoxrPcmResampler::Open(AudioFormat &af, unsigned new_sample_rate)
  	assert(audio_valid_sample_rate(new_sample_rate));
  
  	soxr_error_t e;
@@ -167,3 +167,9 @@ index 411e79b43..f1b3fe7e6 100644
  	if (soxr == nullptr)
  		throw FormatRuntimeError("soxr initialization has failed: %s",
  					 e);
+ 
+ 	FormatDebug(soxr_domain, "soxr engine '%s'", soxr_engine(soxr));
++	FormatDebug(soxr_domain, "soxr precision=%0.2f, phase_response=%0.2f, passband_end=%0.2f, stopband_begin=%0.2f scale=%0.2f", soxr_quality.precision, soxr_quality.phase_response, soxr_quality.passband_end, soxr_quality.stopband_begin, soxr_io.scale  );
+ 
+ 	channels = af.channels;
+ 
