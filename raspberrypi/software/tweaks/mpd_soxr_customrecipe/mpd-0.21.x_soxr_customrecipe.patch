@@ -1,5 +1,5 @@
 diff --git a/src/pcm/SoxrResampler.cxx b/src/pcm/SoxrResampler.cxx
-index 411e79b43..071e81aae 100644
+index 411e79b43..3783f5214 100644
 --- a/src/pcm/SoxrResampler.cxx
 +++ b/src/pcm/SoxrResampler.cxx
 @@ -29,6 +29,8 @@
@@ -115,7 +115,7 @@ index 411e79b43..071e81aae 100644
 +					    value);
 +	}
 +
-+	return pow(10, value/10.0);
++	return 1/pow(10, value/10.0);
 +}
 +
  void
