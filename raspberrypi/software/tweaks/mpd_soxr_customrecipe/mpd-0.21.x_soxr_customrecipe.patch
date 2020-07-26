@@ -2,6 +2,14 @@ diff --git a/src/pcm/SoxrResampler.cxx b/src/pcm/SoxrResampler.cxx
 index 411e79b43..3783f5214 100644
 --- a/src/pcm/SoxrResampler.cxx
 +++ b/src/pcm/SoxrResampler.cxx
+@ -28,6 +28,7 @@
+
+ #include <assert.h>
+ #include <string.h>
++#include <math.h>
+
+ static constexpr Domain soxr_domain("soxr");
+
 @@ -38,9 +40,16 @@ static constexpr unsigned long SOXR_DEFAULT_RECIPE = SOXR_HQ;
   */
  static constexpr unsigned long SOXR_INVALID_RECIPE = -1;
