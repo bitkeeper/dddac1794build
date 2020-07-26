@@ -2,10 +2,10 @@ diff --git a/src/Main.cxx b/src/Main.cxx
 index bcba497ba..ac75c7ba7 100644
 --- a/src/Main.cxx
 +++ b/src/Main.cxx
-@@ -348,6 +348,15 @@ Instance::BeginShutdownPartitions() noexcept
- 	for (auto &partition : partitions) {
- 		partition.BeginShutdown();
- 	}
+@@ -327,6 +327,15 @@ Instance::BeginShutdownPartitions() noexcept
+ 			? FromString(s)
+ 			: ReplayGainMode::OFF;
+ 	});
 +
 +	const unsigned selective_resample_mode =  
 +			config.GetUnsigned(ConfigOption::SELECTIVE_RESAMPLE_MODE, 0);
@@ -17,7 +17,7 @@ index bcba497ba..ac75c7ba7 100644
 +	partition.pc.SetSelectiveResampleMode( config.GetUnsigned(ConfigOption::SELECTIVE_RESAMPLE_MODE, 0) );
  }
  
- static inline void
+ inline void
 diff --git a/src/config/Option.hxx b/src/config/Option.hxx
 index f4e52a593..094bf01d7 100644
 --- a/src/config/Option.hxx
