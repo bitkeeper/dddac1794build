@@ -13,9 +13,9 @@
 # In the soxr.h file contains the information about the recipe structure
 # soxr_quality_spec:
 #   precision        16|20|24|28|32  bits
-#   phase_response   0-100           0=LINEAR_PHASE, 50= MINIMUM_PHASE
+#   phase_response   0-100           0=MINIMUM_PHASE, 50=LINEAR_PHASE
 #   passband_end     0-100 %
-#   stopband_begin   0-100 %
+#   stopband_begin   100-199 %
 #   flags            bit set
 # soxr_io_spec:
 #   scale            0-10      db attenuation
