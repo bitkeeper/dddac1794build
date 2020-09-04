@@ -136,7 +136,7 @@ index 411e79b43..2abbfcd2e 100644
 +					    svalue);
 +	}
 +
-+	if(value<100 || value> 199) {
++	if(value<100 || value> 150) {
 +			throw FormatInvalidArgument("soxr converter invalid stopband_begin : %d (100-150%)",
 +					    value);
 +	}
