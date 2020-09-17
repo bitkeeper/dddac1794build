@@ -1,0 +1,129 @@
+================================================================
+BUILD RECIPE FOR BUILDING SELECTIVE MODULES FROM THE KERNEL 
+SOURCE TREE AS THE RUNNING KERNEL
+================================================================
+
+----------------------------------------------------------------
+Used environment
+----------------------------------------------------------------
+# device: Pi 4 
+# running kernel:  5.4.61-v7l+ #1339 (moOde 7b1 install)
+# module to rebuild: snd-soc-pcm1794a.ko (located in sound/soc/codecs)
+#
+#Make sure the module isn't in use and loaded, else the checks after 
+# the build can not be peformed.
+
+----------------------------------------------------------------
+1. Install build tooling:
+----------------------------------------------------------------
+sudo apt -y install git bc bison flex libssl-dev make
+sudo wget https://raw.githubusercontent.com/RPi-Distro/rpi-source/master/rpi-source -O /usr/local/bin/rpi-source && sudo chmod +x /usr/local/bin/rpi-source 
+/usr/local/bin/rpi-source -q --tag-update
+
+----------------------------------------------------------------
+2. Get source:
+----------------------------------------------------------------
+
+rpi-source
+#On top of the rpi-source output the used hashes can be found:
+# *** SoC: BCM2711
+# *** Firmware revision: 039088f7d929b0d1cc49e8d2012df0652f908518
+# *** Linux source commit: a3e07c5dfef2664fc1d900ebb4a3f91c04ab700b
+#
+#
+# The Firmware revisions is used in step 4.
+#
+
+#I my case it asked one question, just pressed enter  for default value:
+Code coverage for fuzzing (KCOV) [N/y/?] (NEW)
+
+# The download and extract is the longest part of the build process 
+# (when selective modules are build)
+ 
+----------------------------------------------------------------
+3. Optional get a .config
+----------------------------------------------------------------
+# Default rpi-source places the correct .config.
+#
+# Only required if custom config is used or build for different 
+# architecture then the current running kernel.
+
+# example: extract of config of current running kernel:
+cd ~.linux
+sudo modprobe configs
+sudo zcat /proc/configs > /tmp/.config
+cp /tmp/.config ~/linux
+make oldconfig
+
+# example: use default config file for specific architecture
+# kernel and so also the current architecture).
+# use like make bcmxxx_defconfig where xxx depends on the 
+# architecture.
+#
+# For the pi4:
+cd ~.linux
+make bcm2711_defconfig  
+
+----------------------------------------------------------------
+4. Optional Get Module.ModuleX.symvers
+----------------------------------------------------------------
+# The rpi-source already supplies the Module.sysvers for the current 
+# running Pi architecture
+# Only required if you want to build for a different Pi (like Pi 1,[2|3])
+# Be sure use the matching ModuleX.symvers.
+# Example below for the Pi 4
+cd ~/linux
+RPI_UPDATE_HASH=039088f7d929b0d1cc49e8d2012df0652f908518
+wget https://raw.githubusercontent.com/Hexxeh/rpi-firmware/$RPI_UPDATE_HASH/Module7l.symvers
+cp Module7l.symvers Module.symvers
+
+----------------------------------------------------------------
+5. The build:
+----------------------------------------------------------------
+cd ~/linux
+make prepare
+make modules_prepare
+make -j4 M=sound/soc/codecs modules
+
+----------------------------------------------------------------
+6. The validation:
+----------------------------------------------------------------
+
+1) Check symbol table
+# Requires the symbols of the original like:
+# sudo modprobe --dump-modversions /lib/modules/<path to your kernel module>
+# In this case:
+#	Reference orginal module:
+#	0x3975e1d4      module_layout
+#	0xb1ad28e0      __gnu_mcount_nc
+#	0xa5f12a13      snd_soc_register_component
+#	0x009c31b6      __platform_driver_register
+#	0x2e7f74f3      snd_soc_unregister_component
+#	0x51b93167      platform_driver_unregister
+
+cd ~/linux
+sudo modprobe --dump-modversions sound/soc/codecs/snd-soc-pcm1794a.ko
+
+2) Check insert
+sudo cp sound/soc/codecs/snd-soc-pcm1794a.ko /lib/modules/5.4.61-v7l+/kernel/sound/soc/codecs
+sudo depmod
+# If module is currently loaded you have skip this step:
+sudo modprobe snd-soc-pcm1794a
+sudo dmesg | tail -n 5
+
+# output of dmesg will give a warning, but I think that is expect it you build it your self:
+# snd_soc_pcm1794a: loading out-of-tree module taints kernel.
+
+3) Reboot
+#configure moOde to use the module
+sudo reboot
+
+#check use afterwards
+
+
+----------------------------------------------------------------
+Usefull resources:
+----------------------------------------------------------------
+# https://www.raspberrypi.org/documentation/linux/kernel/building.md
+# http://lostindetails.com/articles/Compiling-a-kernel-module-for-the-raspberry-pi-2
+# https://github.com/RPi-Distro/rpi-source
