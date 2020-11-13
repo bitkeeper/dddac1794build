@@ -4,9 +4,9 @@ EELAYER END
 $Descr A3 16535 11693
 encoding utf-8
 Sheet 1 1
-Title ""
-Date ""
-Rev ""
+Title "DDDAC 1794 Build"
+Date "2020-11-13"
+Rev "2"
 Comp ""
 Comment1 ""
 Comment2 ""
@@ -221,28 +221,6 @@ F 3 "" H 2000 9600 50  0001 C CNN
 	1    2100 9550
 	1    0    0    -1  
 $EndComp
-$Comp
-L dddac1794project:AlloIsolator B?
-U 1 1 5E445286
-P 12050 1700
-F 0 "B?" H 12050 2315 50  0000 C CNN
-F 1 "Allo Isolator" H 12050 2224 50  0000 C CNN
-F 2 "" H 11900 1850 50  0001 C CNN
-F 3 "" H 11900 1850 50  0001 C CNN
-	1    12050 1700
-	1    0    0    -1  
-$EndComp
-$Comp
-L dddac1794project:HifiberryDigi+Pro B?
-U 1 1 5E448526
-P 14200 1450
-F 0 "B?" H 14200 1815 50  0000 C CNN
-F 1 "HifiberryDigi+Pro" H 14200 1724 50  0000 C CNN
-F 2 "" H 14100 1450 50  0001 C CNN
-F 3 "" H 14100 1450 50  0001 C CNN
-	1    14200 1450
-	1    0    0    -1  
-$EndComp
 Text Notes 850  2350 2    50   ~ 0
 230VAC
 $Comp
@@ -268,10 +246,10 @@ F 3 "" H 10250 8050 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L dddac1794project:DDDACModPbT Deck2
+L dddac1794project:DDDACModPbT Deck3
 U 1 1 5E463A5E
 P 10250 7450
-F 0 "Deck2" H 10250 7850 50  0000 C CNN
+F 0 "Deck3" H 10250 7850 50  0000 C CNN
 F 1 "DAC Modulde PbT" H 10250 7750 50  0000 C CNN
 F 2 "" H 10250 7450 50  0001 C CNN
 F 3 "" H 10250 7450 50  0001 C CNN
@@ -335,17 +313,6 @@ F 2 "" H 7700 5750 50  0001 C CNN
 F 3 "" H 7700 5750 50  0001 C CNN
 	1    7650 5800
 	1    0    0    -1  
-$EndComp
-$Comp
-L dddac1794project:RelayModule1x RM?
-U 1 1 5E47D444
-P 2000 4300
-F 0 "RM?" H 2000 4515 50  0000 C CNN
-F 1 "RelayModule1x" H 2000 4424 50  0000 C CNN
-F 2 "" H 2050 4250 50  0001 C CNN
-F 3 "" H 2050 4250 50  0001 C CNN
-	1    2000 4300
-	-1   0    0    -1  
 $EndComp
 Wire Wire Line
 	8200 6200 8450 6200
@@ -464,7 +431,7 @@ Wire Bus Line
 	11050 8000 11250 8000
 Connection ~ 11250 8000
 Wire Bus Line
-	11250 8000 11250 7400
+	11250 8000 11250 7700
 $Comp
 L dddac1794project:powerctrl B?
 U 1 1 5E4DF65B
@@ -528,18 +495,11 @@ Wire Wire Line
 Wire Wire Line
 	1750 3500 1250 3500
 Wire Wire Line
-	1250 3500 1250 4450
-Wire Wire Line
 	1250 6100 1500 6100
 Wire Wire Line
-	1450 4350 1150 4350
+	1450 4400 1150 4400
 Wire Wire Line
-	1150 4350 1150 3100
-Wire Wire Line
-	1450 4450 1250 4450
-Connection ~ 1250 4450
-Wire Wire Line
-	2550 4350 3250 4350
+	1450 4550 1250 4550
 Wire Wire Line
 	2550 4450 3250 4450
 Wire Wire Line
@@ -580,12 +540,12 @@ Wire Notes Line
 	5200 5250 5200 2950
 Wire Notes Line
 	5200 2950 900  2950
-Text Notes 2500 5050 2    50   ~ 0
+Text Notes 4850 3050 2    50   ~ 0
 soft power down circuit
 Text GLabel 4700 6250 2    50   Output ~ 0
 DIRTY5V
 Text GLabel 4700 6650 2    50   Output ~ 0
-CLEAN5V
+CLEAN3.3V
 $Comp
 L Connector:Conn_Coaxial J?
 U 1 1 5E57EB25
@@ -622,15 +582,6 @@ $EndComp
 NoConn ~ 7450 1600
 NoConn ~ 7450 1700
 NoConn ~ 7450 1800
-Wire Bus Line
-	10350 1400 11150 1400
-Wire Bus Line
-	12950 1400 13400 1400
-NoConn ~ 12950 1600
-NoConn ~ 12950 1700
-NoConn ~ 12950 1900
-NoConn ~ 12950 2000
-NoConn ~ 15000 1750
 Text Notes 5250 1400 0    50   ~ 0
 USB and Network can be \nconnected from the back \nof the enclosure.
 Wire Wire Line
@@ -658,8 +609,6 @@ Wire Wire Line
 Wire Wire Line
 	11300 2850 11400 2850
 Wire Bus Line
-	15000 1400 15950 1400
-Wire Bus Line
 	15950 1400 15950 6900
 Wire Bus Line
 	15950 6900 9200 6900
@@ -669,8 +618,6 @@ Wire Bus Line
 	9200 8700 9400 8700
 Wire Wire Line
 	4700 6750 4800 6750
-Wire Wire Line
-	13400 1600 13300 1600
 Wire Wire Line
 	13300 6650 4700 6650
 Wire Wire Line
@@ -762,7 +709,7 @@ Wire Wire Line
 Wire Wire Line
 	9450 4500 8950 4500
 Wire Wire Line
-	9350 3800 9350 5200
+	9350 3800 9350 5100
 Wire Wire Line
 	6950 2900 6950 6050
 Wire Wire Line
@@ -772,9 +719,7 @@ Wire Wire Line
 Wire Wire Line
 	7100 6250 7050 6250
 Wire Wire Line
-	7050 6250 7050 5200
-Wire Wire Line
-	7050 5200 9350 5200
+	7050 5100 9350 5100
 $Comp
 L power:GNDD #PWR?
 U 1 1 5E8844E5
@@ -815,9 +760,6 @@ F 3 "" H 4800 6800 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	4800 6750 4800 6800
-Connection ~ 4800 6750
-Wire Wire Line
-	4800 6750 13400 6750
 Connection ~ 1050 6900
 Wire Wire Line
 	1050 6900 1050 9800
@@ -825,13 +767,9 @@ Connection ~ 1250 6100
 Wire Wire Line
 	1050 3000 1050 6900
 Wire Wire Line
-	1250 4450 1250 6100
+	5800 4350 5800 5300
 Wire Wire Line
-	5800 4350 5800 6250
-Wire Wire Line
-	5900 4450 5900 6350
-Wire Wire Line
-	13400 1750 13400 6750
+	5900 4450 5900 5400
 Connection ~ 9650 6250
 Wire Wire Line
 	9400 6050 9400 6350
@@ -839,8 +777,6 @@ Wire Wire Line
 	11750 6100 11750 6250
 Wire Wire Line
 	11750 5600 11750 6250
-Wire Wire Line
-	13300 1600 13300 6650
 Text Label 8750 2800 2    50   ~ 0
 BUS_SELECT
 Text Label 8800 2900 2    50   ~ 0
@@ -857,14 +793,10 @@ Text Label 8700 2000 2    50   ~ 0
 PI_STATE
 Text Label 8700 2700 2    50   ~ 0
 PWR_DWN_REQ
-Text Notes 12900 2400 0    50   ~ 0
-This clean 5V also feeds the clean side from the Isolator.\nOnboard 5V regulators of Isolator is not used.  Both \nHifiberry and the Isolator created 3.3v with onboard regulators
 Text Notes 4500 6050 0    50   ~ 0
-The dirty digital 5V feeds:\n- Raspberry Pi\n- Dirty part of the Isolator\n- OLED display\n- ATTiny45 board\n- 2 Relayboards
+The dirty digital 5V feeds:\n- Raspberry Pi\n- Dirty part of the Isolator\n- OLED display\n- ATTiny45 board\n- 1 Relayboards
 Text Notes 4500 7300 0    50   ~ 0
-The clean digital 5V feeds:\n- Clean part of the Isolator\n- Hifiberrry Digi + Pro
-Text Notes 14500 2800 0    50   ~ 0
-The SPDIF has full galvanic isolation\nwith an output transformer.
+The clean digital 3.3V feeds:\n- Clean part of the Isolator\n- Hifiberrry Digi + Pro
 Text Notes 8250 1600 0    50   ~ 0
 ?
 Text Notes 10450 3200 0    50   ~ 0
@@ -895,8 +827,6 @@ Text Notes 2550 1650 0    50   ~ 0
 Power Supply Section
 Wire Wire Line
 	5800 950  9450 950 
-Wire Bus Line
-	15000 1600 15450 1600
 Text Notes 12500 8600 0    50   ~ 0
 yellow
 Text Notes 12500 9100 0    50   ~ 0
@@ -933,4 +863,97 @@ Text Notes 2950 3200 0    50   ~ 0
 brown
 Text Notes 2950 2950 0    50   ~ 0
 blue
+$Comp
+L dddac1794project:DDDACModPbT Deck2
+U 1 1 5FAF93AE
+P 12250 7750
+F 0 "Deck2" H 12383 8115 50  0000 C CNN
+F 1 "DAC Modules PbT" H 12383 8024 50  0000 C CNN
+F 2 "" H 12400 7800 50  0001 C CNN
+F 3 "" H 12400 7800 50  0001 C CNN
+	1    12250 7750
+	-1   0    0    -1  
+$EndComp
+Wire Bus Line
+	11450 7700 11250 7700
+Connection ~ 11250 7700
+Wire Bus Line
+	11250 7700 11250 7400
+$Comp
+L dddac1794project:FifoPi B?
+U 1 1 5FB05815
+P 12950 1700
+F 0 "B?" H 12950 2315 50  0000 C CNN
+F 1 "FifoPi Q3" H 12950 2224 50  0000 C CNN
+F 2 "" H 12800 1850 50  0001 C CNN
+F 3 "" H 12800 1850 50  0001 C CNN
+	1    12950 1700
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	13300 2500 13300 6650
+Wire Wire Line
+	4800 6750 13450 6750
+Connection ~ 4800 6750
+Wire Wire Line
+	13450 2500 13450 6750
+Wire Wire Line
+	7050 5100 7050 6250
+Wire Wire Line
+	12450 2500 12450 4050
+Wire Wire Line
+	12450 4050 10100 4050
+Wire Wire Line
+	10100 4050 10100 5300
+Wire Wire Line
+	10100 5300 5800 5300
+Connection ~ 5800 5300
+Wire Wire Line
+	5800 5300 5800 6250
+Wire Wire Line
+	5900 5400 10250 5400
+Wire Wire Line
+	10250 5400 10250 4150
+Wire Wire Line
+	12600 4150 12600 2500
+Wire Wire Line
+	10250 4150 12600 4150
+Connection ~ 5900 5400
+Wire Wire Line
+	5900 5400 5900 6350
+Wire Bus Line
+	10350 1400 12050 1400
+Wire Bus Line
+	13850 1400 15950 1400
+Text Notes 14350 2450 0    50   ~ 0
+SPDIF OUT is currently floating until a \noutput board for the FifoPi is bought.
+NoConn ~ 13850 1600
+Text Notes 13650 2100 0    50   ~ 0
+In practice the instead of the Pi GPIO \nheader the GPIO Breakout header is \nconnected to the UnIsolated GPIO \nof the Fifopi.
+Wire Bus Line
+	13850 1750 14100 1750
+Text Notes 2850 5050 2    50   ~ 0
+All the power connections are connected \nto a  PCB which contains the solidstaterelay.\nBut for clearity the connections are drawn \nwithout the PCB in place.
+$Comp
+L dddac1794project:SolidStateRelayModule RM?
+U 1 1 5FB06778
+P 2000 4300
+F 0 "RM?" H 2000 4515 50  0000 C CNN
+F 1 "SolidStateRelayModule" H 2000 4424 50  0000 C CNN
+F 2 "" H 2050 4250 50  0001 C CNN
+F 3 "" H 2050 4250 50  0001 C CNN
+	1    2000 4300
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2550 4400 2550 4450
+Connection ~ 1250 4550
+Wire Wire Line
+	1250 4550 1250 6100
+Wire Wire Line
+	1250 3500 1250 4550
+Wire Wire Line
+	1150 3100 1150 4400
+Wire Bus Line
+	15000 1600 15450 1600
 $EndSCHEMATC
