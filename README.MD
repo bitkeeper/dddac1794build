@@ -12,7 +12,7 @@ System exists out of:
  * ~~Hifiberry Digi+ Pro~~
  * ~~Allo Isolator~~
  * Ian Canada Fifopi Q3 with two upgraded clocks
- * The Pi runs Moode Audio
+ * The Pi runs Moode Audio 7.0.0
  * Wired network
 * Digital Inputs
   * 2 SPDIF
