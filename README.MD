@@ -9,8 +9,9 @@ System exists out of:
   * 2 Cinemags 600/600L for audio output
 * I2S audio source
  * Raspberry 3B
- * Hifiberry Digi+ Pro
- * Allo Isolator
+ * ~~Hifiberry Digi+ Pro~~
+ * ~~Allo Isolator~~
+ * Ian Canada Fifopi Q3 with two upgraded clocks
  * The Pi runs Moode Audio
  * Wired network
 * Digital Inputs
